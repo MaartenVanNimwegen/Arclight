@@ -1,3 +1,7 @@
+using Arclight.Application;
+using Arclight.Application.Services;
+using Arclight.Infrastructure;
+using Arclight.Api.Endpoints;
 
 namespace Arclight.Api
 {
@@ -6,11 +10,14 @@ namespace Arclight.Api
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            builder.Services.AddApplication();
+            builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
-            // Add services to the container.
+            builder.Services.AddEndpointsApiExplorer();
 
             builder.Services.AddControllers();
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+          
             builder.Services.AddOpenApi();
 
             var app = builder.Build();
@@ -21,12 +28,16 @@ namespace Arclight.Api
                 app.MapOpenApi();
             }
 
+            // Configure Middleware
+
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
 
-
             app.MapControllers();
+
+            // Configure Endpoints
+            app.MapUserEndpoints();
 
             app.Run();
         }
