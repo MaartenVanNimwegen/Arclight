@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Arclight.Api/Arclight.Api.csproj" />
+  <Project Path="Arclight.Application/Arclight.Application.csproj" />
+  <Project Path="Arclight.Domain/Arclight.Domain.csproj" />
+  <Project Path="Arclight.Infrastructure/Arclight.Infrastructure.csproj" />
+</Solution>
