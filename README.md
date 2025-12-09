@@ -1,8 +1,8 @@
 ﻿# Arclight
 
-![Build Status](https://github.com/USERNAME/REPO/actions/workflows/pr-validation.yml/badge.svg)
-![Release Status](https://github.com/USERNAME/REPO/actions/workflows/master-release.yml/badge.svg)
-![Security Scan](https://github.com/USERNAME/REPO/actions/workflows/codeql.yml/badge.svg)
+![Build Status](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/pr-validation.yml/badge.svg)
+![Release Status](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/master-release.yml/badge.svg)
+![Security Scan](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/codeql.yml/badge.svg)
 ![.NET Version](https://img.shields.io/badge/.NET-10.0-purple)
 
 Arclight is a modern RESTful Web API built with .NET 10 and **Entity Framework Core**, following **Clean Architecture** principles. This project demonstrates a professional setup including automated CI/CD pipelines, database migrations, and strict development workflows.
