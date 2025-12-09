@@ -8,7 +8,7 @@ namespace Arclight.Api.Endpoints
     {
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/products");
+            var group = app.MapGroup("/user");
 
             group.MapPost("/register", CreateUser);
             group.MapGet("/{id:guid}", GetUser);
