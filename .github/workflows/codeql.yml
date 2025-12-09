@@ -1,0 +1,46 @@
+name: "CodeQL Security Scan"
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    # Scan alleen PRs die naar master gaan
+    branches: [ "master" ]
+  schedule:
+    # Also runs once per week.
+    - cron: '30 1 * * 0'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'csharp' ]
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    # CodeQL moet geïnitialiseerd worden
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+
+    # CodeQL probeert je project automatisch te bouwen. 
+    # Voor standaard .NET solutions werkt dit in 99% van de gevallen direct.
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v3
+
+    # Hier gebeurt de magie: de analyse
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
