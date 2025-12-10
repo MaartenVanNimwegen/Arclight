@@ -1,6 +1,10 @@
 <Solution>
+  <Project Path="Arclight.Api.IntegrationTests/Arclight.Api.IntegrationTests.csproj" Id="6a3e1c3d-3c7e-4a6f-bc9c-27a5b039e572" />
   <Project Path="Arclight.Api/Arclight.Api.csproj" />
+  <Project Path="Arclight.Application.Tests/Arclight.Application.Tests.csproj" Id="daf7b885-8542-44ce-b7d9-46506c2e520c" />
   <Project Path="Arclight.Application/Arclight.Application.csproj" />
+  <Project Path="Arclight.Domain.Tests/Arclight.Domain.Tests.csproj" Id="895ad4e9-1179-4db3-aeec-fcb52df66f6d" />
   <Project Path="Arclight.Domain/Arclight.Domain.csproj" />
+  <Project Path="Arclight.Infrastructure.Tests/Arclight.Infrastructure.Tests.csproj" Id="a2103e55-f424-4cd6-8e8b-f54b5c977f3c" />
   <Project Path="Arclight.Infrastructure/Arclight.Infrastructure.csproj" />
 </Solution>
