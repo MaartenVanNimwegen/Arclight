@@ -1,6 +1,6 @@
 ﻿# Arclight
 
-![Build Status](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/pr-validation.yml/badge.svg)
+![Build Status](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/pr-validator.yml/badge.svg)
 ![Release Status](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/master-release.yml/badge.svg)
 ![Security Scan](https://github.com/MaartenVanNimwegen/Arclight/actions/workflows/codeql.yml/badge.svg)
 ![Code Coverage](https://raw.githubusercontent.com/MaartenVanNimwegen/Arclight/badges/badge_shield.svg)
