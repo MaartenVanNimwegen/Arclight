@@ -15,9 +15,9 @@ namespace Arclight.Api.Endpoints
             group.MapPost("/login", Login);
         }
 
-        static async Task<IResult> CreateUser(string email, string firstName, string lastName, string password, UserRole role, IUserService service)
+        static async Task<IResult> CreateUser(RegisterRequest request, UserRole role, IUserService service)
         {
-            var id = await service.CreateUserAsync(email, firstName, lastName, password, role);
+            var id = await service.CreateUserAsync(request.email, request.firstName, request.lastName, request.password, role);
             return Results.Created($"/users/{id}", id);
         }
 
