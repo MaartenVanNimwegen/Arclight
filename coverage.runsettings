@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat Code Coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Exclude>
+            <ModulePath>.*Tests.dll</ModulePath>
+            <ModulePath>.*xunit.*</ModulePath>
+            <ModulePath>.*moq.*</ModulePath>
+            <File>.*Tests.*</File> 
+            <File>.*[Mm]igrations.*</File>
+            <File>.*Program.cs</File>
+            <Attribute>ExcludeFromCodeCoverageAttribute</Attribute>
+          </Exclude>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
