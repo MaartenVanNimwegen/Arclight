@@ -3,9 +3,11 @@ name: PR Validation
 on:
   pull_request:
     branches: [ "master" ]
+  push:
+    branches: [ "master" ]
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -48,3 +50,14 @@ jobs:
       with:
         recreate: true
         path: code-coverage-results.md
+
+    - name: Archive Coverage Badge
+      uses: EndBug/add-and-commit@v9
+      if: github.ref == 'refs/heads/master'
+      with:
+        author_name: GitHub Actions
+        author_email: actions@github.com
+        message: 'Update coverage badge'
+        add: 'badge_shield.svg'
+        new_branch: badges
+        push: true
