@@ -68,6 +68,9 @@ public class User : Entity
         UserRole role,
         UserStatus status) : base(id)
     {
+        if (!Enum.IsDefined(typeof(UserRole), role)) throw new ArgumentException("Invalid user role");
+        if (!Enum.IsDefined(typeof(UserStatus), status)) throw new ArgumentException("Invalid user status");
+
         Email = email;
         FirstName = firstName;
         LastName = lastName;
@@ -109,6 +112,7 @@ public class User : Entity
 
     public void ChangeRole(UserRole newRole)
     {
+        if (!Enum.IsDefined(typeof(UserRole), newRole)) throw new ArgumentException("Invalid user role");
         if (Role == newRole) return;
 
         Role = newRole;
