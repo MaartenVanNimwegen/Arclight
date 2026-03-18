@@ -35,6 +35,20 @@ public class UserTests
         user.Status.Should().Be(UserStatus.Inactive);
     }
 
+    [Fact]
+    public void SeedConstructor_ShouldThrowException_WhenRoleIsInvalid()
+    {
+        Action act = () => new User(Guid.NewGuid(), "E", "F", "L", "H", (UserRole)999, UserStatus.Active);
+        act.Should().Throw<ArgumentException>().WithMessage("Invalid user role");
+    }
+
+    [Fact]
+    public void SeedConstructor_ShouldThrowException_WhenStatusIsInvalid()
+    {
+        Action act = () => new User(Guid.NewGuid(), "E", "F", "L", "H", UserRole.Admin, (UserStatus)999);
+        act.Should().Throw<ArgumentException>().WithMessage("Invalid user status");
+    }
+
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
