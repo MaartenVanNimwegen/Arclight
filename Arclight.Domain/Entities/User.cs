@@ -15,7 +15,7 @@ public class User : Entity
     public DateTimeOffset? LastLoggedinDate { get; private set; }
     public string FullName => $"{FirstName}, {LastName}";
 
-    // Navigation property: Een User kan meerdere artikelen geschreven hebben
+    // Navigation property: A user can have authored multiple articles
     public IReadOnlyCollection<Article> Articles => _articles.AsReadOnly();
     private readonly List<Article> _articles = new();
 
