@@ -110,6 +110,16 @@ public class UserTests
     }
 
     [Fact]
+    public void ChangeRole_ShouldThrowException_WhenInvalidRoleProvided()
+    {
+        var user = new User("E", "F", "L", "H", UserRole.Admin);
+
+        Action act = () => user.ChangeRole((UserRole)999);
+
+        act.Should().Throw<ArgumentException>();
+    }
+
+    [Fact]
     public void RecordLogin_ShouldSetLastLoggedinDate()
     {
         var user = new User("E", "F", "L", "H", UserRole.Admin);
