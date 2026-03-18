@@ -42,6 +42,16 @@ public class ArticleTests
         actContent.Should().Throw<ArgumentException>().WithMessage("Content is required");
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(null)]
+    public void Constructor_ShouldThrowException_WhenSummaryIsInvalid(string invalidSummary)
+    {
+        Action actSummary = () => new Article("Title", "slug", invalidSummary, "content", _authorId, _categoryId);
+        actSummary.Should().Throw<ArgumentException>().WithMessage("Summary is required");
+    }
+
     [Fact]
     public void Constructor_ShouldThrowException_WhenGuidsAreEmpty()
     {
