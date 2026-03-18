@@ -32,6 +32,7 @@ namespace Arclight.Domain.Entities
         {
             if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title is required");
             if (string.IsNullOrWhiteSpace(slug)) throw new ArgumentException("Slug is required");
+            if (string.IsNullOrWhiteSpace(summary)) throw new ArgumentException("Summary is required");
             if (string.IsNullOrWhiteSpace(content)) throw new ArgumentException("Content is required");
             if (authorId == Guid.Empty) throw new ArgumentException("AuthorId cannot be empty");
             if (categoryId == Guid.Empty) throw new ArgumentException("CategoryId cannot be empty");
