@@ -15,6 +15,10 @@ public class User : Entity
     public DateTimeOffset? LastLoggedinDate { get; private set; }
     public string FullName => $"{FirstName}, {LastName}";
 
+    // Navigation property: Een User kan meerdere artikelen geschreven hebben
+    public IReadOnlyCollection<Article> Articles => _articles.AsReadOnly();
+    private readonly List<Article> _articles = new();
+
     /// <summary>
     /// Default constructor for creating new Users
     /// </summary>
@@ -34,13 +38,15 @@ public class User : Entity
         if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email is required");
         if (string.IsNullOrWhiteSpace(firstName)) throw new ArgumentException("First name is required");
         if (string.IsNullOrWhiteSpace(lastName)) throw new ArgumentException("Last name is required");
+        if (string.IsNullOrWhiteSpace(passwordHash)) throw new ArgumentException("Password hash is required");
+        if (!Enum.IsDefined(typeof(UserRole), role)) throw new ArgumentException("Invalid user role");
 
         Email = email;
         FirstName = firstName;
         LastName = lastName;
         PasswordHash = passwordHash;
         Role = role;
-        Status = UserStatus.Active; // Default to Active on creation
+        Status = UserStatus.Active;
     }
 
     /// <summary>
