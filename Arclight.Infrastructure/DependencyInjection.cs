@@ -15,6 +15,7 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IArticleRepository, ArticleRepository>();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
