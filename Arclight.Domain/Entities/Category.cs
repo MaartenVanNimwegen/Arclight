@@ -10,7 +10,7 @@ namespace Arclight.Domain.Entities
         public string? Description { get; private set; }
 
         // Navigation property (EF Core)
-        // Een categorie kan meerdere artikelen hebben
+        // A category can have multiple articles
         public IReadOnlyCollection<Article> Articles => _articles.AsReadOnly();
         private readonly List<Article> _articles = new();
 
