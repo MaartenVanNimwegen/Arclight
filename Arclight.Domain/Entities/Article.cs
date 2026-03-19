@@ -52,17 +52,19 @@ namespace Arclight.Domain.Entities
 
         // --- Domain Behaviors ---
 
-        public void UpdateContent(string title, string slug, string summary, string content)
+        public void UpdateContent(string title, string slug, string summary, string content, Guid categoryId)
         {
             if (string.IsNullOrWhiteSpace(title)) throw new ArgumentException("Title cannot be empty");
             if (string.IsNullOrWhiteSpace(slug)) throw new ArgumentException("Slug cannot be empty");
             if (string.IsNullOrWhiteSpace(summary)) throw new ArgumentException("Summary cannot be empty");
             if (string.IsNullOrWhiteSpace(content)) throw new ArgumentException("Content cannot be empty");
+            if (categoryId == Guid.Empty) throw new ArgumentException("CategoryId cannot be empty");
 
             Title = title;
             Slug = slug;
             Summary = summary;
             Content = content;
+            CategoryId = categoryId;
 
             SetUpdatedDate();
         }

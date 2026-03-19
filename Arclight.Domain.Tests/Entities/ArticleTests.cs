@@ -69,7 +69,7 @@ public class ArticleTests
     {
         var article = new Article("T", "s", "s", "c", _authorId, _categoryId);
 
-        article.UpdateContent("NewTitle", "new-slug", "NewSum", "NewContent");
+        article.UpdateContent("NewTitle", "new-slug", "NewSum", "NewContent", Guid.NewGuid());
 
         article.Title.Should().Be("NewTitle");
         article.Slug.Should().Be("new-slug");
@@ -84,18 +84,22 @@ public class ArticleTests
     public void UpdateContent_ShouldThrowException_WhenDataIsInvalid(string invalid)
     {
         var article = new Article("T", "s", "s", "c", _authorId, _categoryId);
+        var newCatId = Guid.NewGuid();
 
-        Action actTitle = () => article.UpdateContent(invalid, "s", "s", "c");
+        Action actTitle = () => article.UpdateContent(invalid, "s", "s", "c", newCatId);
         actTitle.Should().Throw<ArgumentException>().WithMessage("Title cannot be empty");
 
-        Action actSlug = () => article.UpdateContent("T", invalid, "s", "c");
+        Action actSlug = () => article.UpdateContent("T", invalid, "s", "c", newCatId);
         actSlug.Should().Throw<ArgumentException>().WithMessage("Slug cannot be empty");
 
-        Action actSum = () => article.UpdateContent("T", "s", invalid, "c");
+        Action actSum = () => article.UpdateContent("T", "s", invalid, "c", newCatId);
         actSum.Should().Throw<ArgumentException>().WithMessage("Summary cannot be empty");
 
-        Action actContent = () => article.UpdateContent("T", "s", "s", invalid);
+        Action actContent = () => article.UpdateContent("T", "s", "s", invalid, newCatId);
         actContent.Should().Throw<ArgumentException>().WithMessage("Content cannot be empty");
+
+        Action actCategoryId = () => article.UpdateContent("T", "s", "s", "c", Guid.Empty);
+        actCategoryId.Should().Throw<ArgumentException>().WithMessage("CategoryId cannot be empty");
     }
 
     [Fact]
