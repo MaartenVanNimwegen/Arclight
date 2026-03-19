@@ -7,11 +7,14 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
 
 namespace Arclight.Api.IntegrationTests;
 
 public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
+    private readonly string _databaseName = $"IntegrationTestsDb-{Guid.NewGuid()}";
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
@@ -25,7 +28,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.AddSingleton<DbContextOptions<AppDbContext>>(provider =>
             {
                 return new DbContextOptionsBuilder<AppDbContext>()
-                    .UseInMemoryDatabase("IntegrationTestsDb")
+                    .UseInMemoryDatabase(_databaseName)
                     .Options;
             });
 
