@@ -1,17 +1,38 @@
-using Arclight.Application;
-using Arclight.Application.Services;
-using Arclight.Infrastructure;
 using Arclight.Api.Endpoints;
+using Arclight.Application;
+using Arclight.Infrastructure;
 using Arclight.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace Arclight.Api
 {
-    public class Program
+    public partial class Program
     {
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
+
+            var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
+            var jwtAudience = builder.Configuration["JwtSettings:Audience"];
+            var jwtSecret = builder.Configuration["JwtSettings:Secret"];
+
+            if (string.IsNullOrWhiteSpace(jwtIssuer))
+            {
+                throw new InvalidOperationException("JWT configuration error: 'JwtSettings:Issuer' is missing or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtAudience))
+            {
+                throw new InvalidOperationException("JWT configuration error: 'JwtSettings:Audience' is missing or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+            {
+                throw new InvalidOperationException("JWT configuration error: 'JwtSettings:Secret' is missing or empty.");
+            }
+
             builder.Services.AddApplication();
             builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
@@ -20,6 +41,34 @@ namespace Arclight.Api
             builder.Services.AddControllers();
           
             builder.Services.AddOpenApi();
+
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.MapInboundClaims = false;
+
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtIssuer,
+                    ValidAudience = jwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+
+                    RoleClaimType = "role",
+                    NameClaimType = "sub"
+                };
+            });
+
+            // Add authorization
+            builder.Services.AddAuthorization(options =>
+            {
+                // To be RequireContentManager, user must have role Admin or ContentCreator
+                options.AddPolicy("RequireContentManager", policy =>
+                    policy.RequireRole("Admin", "ContentCreator"));
+            });
 
             var app = builder.Build();
 
@@ -54,12 +103,14 @@ namespace Arclight.Api
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
 
             // Configure Endpoints
             app.MapUserEndpoints();
+            app.MapArticleEndpoints();
 
             app.Run();
         }
