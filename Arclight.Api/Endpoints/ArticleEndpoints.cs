@@ -3,6 +3,7 @@ using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
 using System.Security.Claims;
+using System;
 
 namespace Arclight.Api.Endpoints;
 
@@ -49,6 +50,10 @@ public static class ArticleEndpoints
 
             var id = await service.CreateArticleAsync(request, authorId);
             return Results.Created($"/articles/{id}", id);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Unauthorized();
         }
         catch (ArgumentException ex)
         {
