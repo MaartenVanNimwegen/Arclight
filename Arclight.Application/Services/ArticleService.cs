@@ -80,7 +80,7 @@ public class ArticleService(IArticleRepository repository, ISlugService slugServ
             return false;
         }
 
-        article.UpdateContent(request.Title, article.Slug, request.Summary, request.Content);
+        article.UpdateContent(request.Title, article.Slug, request.Summary, request.Content, request.CategoryId);
 
         await repository.SaveChangesAsync();
         return true;
