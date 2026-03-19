@@ -12,6 +12,8 @@ namespace Arclight.Application
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
             services.AddScoped<IUserService, UserService>();
+            services.AddScoped<IArticleService, ArticleService>();
+            services.AddScoped<ISlugService, SlugService>();
 
             return services;
         }
