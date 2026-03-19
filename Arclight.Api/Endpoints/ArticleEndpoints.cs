@@ -62,7 +62,7 @@ public static class ArticleEndpoints
 
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { message = "Artikel niet gevonden." });
+            : Results.NotFound(new { message = "Article not found." });
     }
 
     static async Task<IResult> DeleteArticle(Guid id, IArticleService service)
@@ -71,6 +71,6 @@ public static class ArticleEndpoints
 
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { message = "Artikel niet gevonden." });
+            : Results.NotFound(new { message = "Article not found." });
     }
 }
