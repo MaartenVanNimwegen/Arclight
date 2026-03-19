@@ -14,6 +14,25 @@ namespace Arclight.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
+            var jwtAudience = builder.Configuration["JwtSettings:Audience"];
+            var jwtSecret = builder.Configuration["JwtSettings:Secret"];
+
+            if (string.IsNullOrWhiteSpace(jwtIssuer))
+            {
+                throw new InvalidOperationException("JWT configuration error: 'JwtSettings:Issuer' is missing or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtAudience))
+            {
+                throw new InvalidOperationException("JWT configuration error: 'JwtSettings:Audience' is missing or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(jwtSecret))
+            {
+                throw new InvalidOperationException("JWT configuration error: 'JwtSettings:Secret' is missing or empty.");
+            }
+
             builder.Services.AddApplication();
             builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!);
 
@@ -34,9 +53,9 @@ namespace Arclight.Api
                     ValidateAudience = true,
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
-                    ValidIssuer = "ArclightApi",
-                    ValidAudience = "ArclightClient",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JwtSettings:Secret"]!)),
+                    ValidIssuer = jwtIssuer,
+                    ValidAudience = jwtAudience,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
 
                     RoleClaimType = "role",
                     NameClaimType = "sub"
