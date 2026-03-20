@@ -75,7 +75,67 @@ public class UserEndpointsTests : BaseIntegrationTest
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    [Fact]
+    public async Task Register_ShouldReturnBadRequest_WhenEmailIsEmpty()
+    {
+        // Arrange
+        var request = new RegisterRequest("", "Jan", "Jansen", "Wachtwoord123!");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/register", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Email cannot be empty");
+    }
+
+    [Fact]
+    public async Task Register_ShouldReturnBadRequest_WhenPasswordIsTooShort()
+    {
+        // Arrange
+        var request = new RegisterRequest("valid@test.nl", "Jan", "Jansen", "short");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/register", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Password must be at least 8 characters");
+    }
+
     // Login tests
+
+    [Fact]
+    public async Task Login_ShouldReturnBadRequest_WhenEmailIsEmpty()
+    {
+        // Arrange
+        var request = new LoginRequest("", "Wachtwoord123!");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/login", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Email cannot be empty");
+    }
+
+    [Fact]
+    public async Task Login_ShouldReturnBadRequest_WhenPasswordIsEmpty()
+    {
+        // Arrange
+        var request = new LoginRequest("valid@test.nl", "");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/login", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Password cannot be empty");
+    }
 
     [Fact]
     public async Task Login_ShouldReturnUnauthorized_WhenCredentialsAreWrong()

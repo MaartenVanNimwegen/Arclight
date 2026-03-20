@@ -20,7 +20,13 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             Detail = "An unexpected error occurred on our end. Please try again later."
         };
 
+        if (httpContext.Response.HasStarted)
+        {
+            return false;
+        }
+
         httpContext.Response.StatusCode = problemDetails.Status.Value;
+        httpContext.Response.ContentType = "application/problem+json";
 
         await httpContext.Response.WriteAsJsonAsync(problemDetails, cancellationToken);
 
