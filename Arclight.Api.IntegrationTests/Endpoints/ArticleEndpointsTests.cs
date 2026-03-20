@@ -101,4 +101,18 @@ public class ArticleEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    [Fact]
+    public async Task UpdateArticle_ShouldReturnBadRequest_WhenTitleIsEmpty()
+    {
+        // Arrange
+        var randomId = Guid.NewGuid();
+        var request = new UpdateArticleRequest("", "Summary", "Content", Guid.NewGuid());
+
+        // Act
+        var response = await _client.PutAsJsonAsync($"/articles/{randomId}", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
 }
