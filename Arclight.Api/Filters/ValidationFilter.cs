@@ -13,7 +13,7 @@ public class ValidationFilter<T>(IValidator<T> validator) : IEndpointFilter wher
             return Results.BadRequest("Invalid request body.");
         }
 
-        var validationResult = await validator.ValidateAsync(argument);
+        var validationResult = await validator.ValidateAsync(argument, context.HttpContext.RequestAborted);
 
         if (!validationResult.IsValid)
         {
