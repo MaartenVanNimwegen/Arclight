@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Arclight.Domain.Entities;
 
-namespace Arclight.Application.Interfaces
+namespace Arclight.Application.Interfaces;
+
+public interface ICategoryRepository
 {
-    internal class ICategoryRepository
-    {
-    }
+    Task<Category?> GetByIdAsync(Guid id);
 }

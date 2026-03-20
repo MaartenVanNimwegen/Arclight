@@ -9,14 +9,9 @@ using Xunit;
 
 namespace Arclight.Api.IntegrationTests.Endpoints;
 
-public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
+public class UserEndpointsTests : BaseIntegrationTest
 {
-    private readonly HttpClient _client;
-
-    public UserEndpointsTests(CustomWebApplicationFactory factory)
-    {
-        _client = factory.CreateClient();
-    }
+    public UserEndpointsTests(CustomWebApplicationFactory factory) : base(factory) { }
 
     // Register tests
 
@@ -27,7 +22,7 @@ public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var request = new RegisterRequest("nieuw@test.nl", "Jan", "Jansen", "Wachtwoord123!");
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/register", request);
+        var response = await Client.PostAsJsonAsync("/user/register", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -42,9 +37,9 @@ public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var email = "dubbel@test.nl";
         var request = new RegisterRequest(email, "Piet", "Pieters", "Wachtwoord123!");
 
-        await _client.PostAsJsonAsync("/user/register", request);
+        await Client.PostAsJsonAsync("/user/register", request);
 
-        var response = await _client.PostAsJsonAsync("/user/register", request);
+        var response = await Client.PostAsJsonAsync("/user/register", request);
 
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
@@ -58,7 +53,7 @@ public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var randomId = Guid.NewGuid();
 
         // Act
-        var response = await _client.GetAsync($"/user/{randomId}");
+        var response = await Client.GetAsync($"/user/{randomId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -69,18 +64,78 @@ public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     {
         // Arrange
         var request = new RegisterRequest("getuser@test.nl", "Klaas", "Vaak", "Wachtwoord123!");
-        var registerResponse = await _client.PostAsJsonAsync("/user/register", request);
+        var registerResponse = await Client.PostAsJsonAsync("/user/register", request);
 
         var createdUserId = await registerResponse.Content.ReadFromJsonAsync<Guid>();
 
         // Act
-        var response = await _client.GetAsync($"/user/{createdUserId}");
+        var response = await Client.GetAsync($"/user/{createdUserId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
     }
 
+    [Fact]
+    public async Task Register_ShouldReturnBadRequest_WhenEmailIsEmpty()
+    {
+        // Arrange
+        var request = new RegisterRequest("", "Jan", "Jansen", "Wachtwoord123!");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/register", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Email cannot be empty");
+    }
+
+    [Fact]
+    public async Task Register_ShouldReturnBadRequest_WhenPasswordIsTooShort()
+    {
+        // Arrange
+        var request = new RegisterRequest("valid@test.nl", "Jan", "Jansen", "short");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/register", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Password must be at least 8 characters");
+    }
+
     // Login tests
+
+    [Fact]
+    public async Task Login_ShouldReturnBadRequest_WhenEmailIsEmpty()
+    {
+        // Arrange
+        var request = new LoginRequest("", "Wachtwoord123!");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/login", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Email cannot be empty");
+    }
+
+    [Fact]
+    public async Task Login_ShouldReturnBadRequest_WhenPasswordIsEmpty()
+    {
+        // Arrange
+        var request = new LoginRequest("valid@test.nl", "");
+
+        // Act
+        var response = await Client.PostAsJsonAsync("/user/login", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Password cannot be empty");
+    }
 
     [Fact]
     public async Task Login_ShouldReturnUnauthorized_WhenCredentialsAreWrong()
@@ -89,7 +144,7 @@ public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var request = new LoginRequest("fout@test.nl", "VerkeerdWachtwoord!");
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/login", request);
+        var response = await Client.PostAsJsonAsync("/user/login", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -103,12 +158,12 @@ public class UserEndpointsTests : IClassFixture<CustomWebApplicationFactory>
         var password = "GoedWachtwoord123!";
 
         var registerRequest = new RegisterRequest(email, "Login", "Test", password);
-        await _client.PostAsJsonAsync("/user/register", registerRequest);
+        await Client.PostAsJsonAsync("/user/register", registerRequest);
 
         var loginRequest = new LoginRequest(email, password);
 
         // Act
-        var response = await _client.PostAsJsonAsync("/user/login", loginRequest);
+        var response = await Client.PostAsJsonAsync("/user/login", loginRequest);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);

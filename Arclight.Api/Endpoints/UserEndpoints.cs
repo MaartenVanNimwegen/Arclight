@@ -1,4 +1,5 @@
-﻿using Arclight.Application.DTOs;
+﻿using Arclight.Api.Filters;
+using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
@@ -11,28 +12,25 @@ namespace Arclight.Api.Endpoints
         {
             var group = app.MapGroup("/user");
 
-            group.MapPost("/register", CreateUser);
+            group.MapPost("/register", CreateUser)
+                .AddEndpointFilter<ValidationFilter<RegisterRequest>>();
+
             group.MapGet("/{id:guid}", GetUser);
-            group.MapPost("/login", Login);
+
+            group.MapPost("/login", Login)
+                .AddEndpointFilter<ValidationFilter<LoginRequest>>();
         }
 
         static async Task<IResult> CreateUser(RegisterRequest request, IUserService service)
         {
             try
-            { 
-                Guid id = await service.CreateUserAsync(request.email, request.firstName, request.lastName, request.password, UserRole.User);
-
-                // Happy flow: user is successfully created. This returns a 201 Created response.
+            {
+                Guid id = await service.CreateUserAsync(request.Email, request.FirstName, request.LastName, request.Password, UserRole.User);
                 return Results.Created($"/user/{id}", id);
             }
             catch (InvalidOperationException ex)
             {
-                // This exception is thrown in UserService when the email is already in use.
                 return Results.Conflict(new { error = ex.Message });
-            }
-            catch (Exception)
-            {
-                return Results.Problem("There was an internal server error. Try again later.");
             }
         }
 
