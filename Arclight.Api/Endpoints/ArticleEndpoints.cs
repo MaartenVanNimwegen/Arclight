@@ -1,9 +1,10 @@
 ﻿using Arclight.Api.Extensions;
+using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
-using System.Security.Claims;
 using System;
+using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints;
 
@@ -17,8 +18,13 @@ public static class ArticleEndpoints
         group.MapGet("/{slug}", GetArticleBySlug);
 
         // Secured endpoints
-        group.MapPost("/", CreateArticle).RequireAuthorization("RequireContentManager");
-        group.MapPut("/{id:guid}", UpdateArticle).RequireAuthorization("RequireContentManager");
+        group.MapPost("/", CreateArticle)
+            .RequireAuthorization("RequireContentManager")
+            .AddEndpointFilter<ValidationFilter<CreateArticleRequest>>();
+
+        group.MapPut("/{id:guid}", UpdateArticle)
+            .RequireAuthorization("RequireContentManager")
+            .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>();
         group.MapDelete("/{id:guid}", DeleteArticle).RequireAuthorization("RequireContentManager");
     }
 
@@ -43,7 +49,7 @@ public static class ArticleEndpoints
     CreateArticleRequest request,
     IArticleService service,
     ClaimsPrincipal user)
-    {
+    { 
         try
         {
             var authorId = user.GetUserId();
