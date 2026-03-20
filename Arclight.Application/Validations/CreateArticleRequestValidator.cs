@@ -29,7 +29,7 @@ public class CreateArticleRequestValidator : AbstractValidator<CreateArticleRequ
 
     }
 
-    private async Task<bool> CategoryMustExist(Guid categoryId)
+    private async Task<bool> CategoryMustExist(Guid categoryId, CancellationToken cancellationToken)
     {
         var category = await _categoryRepository.GetByIdAsync(categoryId);
         return category is not null;
