@@ -1,12 +1,17 @@
 ﻿using Arclight.Application.DTOs;
+using Arclight.Application.Interfaces;
 using FluentValidation;
 
 namespace Arclight.Application.Validations;
 
 public class CreateArticleRequestValidator : AbstractValidator<CreateArticleRequest>
 {
-    public CreateArticleRequestValidator()
+    private readonly ICategoryRepository _categoryRepository;
+
+    public CreateArticleRequestValidator(ICategoryRepository categoryRepository)
     {
+        _categoryRepository = categoryRepository;
+
         RuleFor(x => x.Title)
             .NotEmpty().WithMessage("Title cannot be empty.")
             .MaximumLength(100).WithMessage("Title may contain a maximum of 100 characters.");
@@ -19,6 +24,14 @@ public class CreateArticleRequestValidator : AbstractValidator<CreateArticleRequ
             .NotEmpty().WithMessage("Content cannot be empty.");
 
         RuleFor(x => x.CategoryId)
-            .NotEmpty().WithMessage("Select a category.");
+            .NotEmpty().WithMessage("Category is required.")
+            .MustAsync(CategoryMustExist).WithMessage("The selected category does not exist.");
+
+    }
+
+    private async Task<bool> CategoryMustExist(Guid categoryId, CancellationToken cancellationToken)
+    {
+        var category = await _categoryRepository.GetByIdAsync(categoryId);
+        return category is not null;
     }
 }

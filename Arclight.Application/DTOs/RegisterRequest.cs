@@ -1,3 +1,8 @@
 ﻿namespace Arclight.Application.DTOs;
 
-public record RegisterRequest(string email, string firstName, string lastName, string password);
+public record RegisterRequest(
+    string Email, 
+    string FirstName, 
+    string LastName, 
+    string Password
+);

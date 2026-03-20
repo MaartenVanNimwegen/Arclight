@@ -1,4 +1,5 @@
 using Arclight.Api.Endpoints;
+using Arclight.Api.Middleware;
 using Arclight.Application;
 using Arclight.Infrastructure;
 using Arclight.Infrastructure.Persistence;
@@ -70,6 +71,9 @@ namespace Arclight.Api
                     policy.RequireRole("Admin", "ContentCreator"));
             });
 
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddProblemDetails();
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
@@ -101,6 +105,7 @@ namespace Arclight.Api
 
             // Configure Middleware
 
+            app.UseExceptionHandler();
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
