@@ -3,9 +3,7 @@ using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
-using FluentValidation;
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints;
