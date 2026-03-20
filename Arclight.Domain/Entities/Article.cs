@@ -44,7 +44,7 @@ namespace Arclight.Domain.Entities
             AuthorId = authorId;
             CategoryId = categoryId;
 
-            IsPublished = false; // Always start as a draft
+            IsPublished = false;
         }
 
         // Required for ORM (EF Core)
