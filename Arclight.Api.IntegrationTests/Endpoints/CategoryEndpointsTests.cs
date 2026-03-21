@@ -33,10 +33,11 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     public async Task CreateCategory_ShouldReturnCreated_WhenValid()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var request = new CreateCategoryRequest("Lifestyle", "Everything about life");
 
         // Act
-        var response = await Client.PostAsJsonAsync("/categories", request);
+        var response = await adminClient.PostAsJsonAsync("/categories", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -48,19 +49,29 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     public async Task CreateCategory_ShouldReturnBadRequest_WhenNameIsEmpty()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var request = new CreateCategoryRequest("", "Description");
 
         // Act
-        var response = await Client.PostAsJsonAsync("/categories", request);
+        var response = await adminClient.PostAsJsonAsync("/categories", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
+    public async Task CreateCategory_ShouldReturnForbidden_WhenNotAdmin()
+    {
+        var request = new CreateCategoryRequest("Lifestyle", "Everything about life");
+        var response = await Client.PostAsJsonAsync("/categories", request);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task DeleteCategory_ShouldReturnNoContent_WhenSuccessful()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var category = new Category("To Delete", "to-delete", "desc");
         await ExecuteDbContextAsync(async (context) =>
         {
@@ -69,7 +80,7 @@ public class CategoryEndpointsTests : BaseIntegrationTest
         });
 
         // Act
-        var response = await Client.DeleteAsync($"/categories/{category.Id}");
+        var response = await adminClient.DeleteAsync($"/categories/{category.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -79,10 +90,11 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     public async Task DeleteCategory_ShouldReturnNotFound_WhenDoesNotExist()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var randomId = Guid.NewGuid();
 
         // Act
-        var response = await Client.DeleteAsync($"/categories/{randomId}");
+        var response = await adminClient.DeleteAsync($"/categories/{randomId}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -92,6 +104,7 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     public async Task DeleteCategory_ShouldReturnConflict_WhenCategoryHasArticles()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var category = new Category("Has Articles", "has-articles", "desc");
         var article = new Article("Title", "slug", "Sum", "Cont", Guid.NewGuid(), category.Id);
 
@@ -103,7 +116,7 @@ public class CategoryEndpointsTests : BaseIntegrationTest
         });
 
         // Act
-        var response = await Client.DeleteAsync($"/categories/{category.Id}");
+        var response = await adminClient.DeleteAsync($"/categories/{category.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Conflict);
@@ -112,9 +125,18 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task DeleteCategory_ShouldReturnForbidden_WhenNotAdmin()
+    {
+        var randomId = Guid.NewGuid();
+        var response = await Client.DeleteAsync($"/categories/{randomId}");
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
     public async Task UpdateCategory_ShouldReturnNoContent_WhenValid()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var category = new Category("Old Name", "old-slug", "Old Desc");
         await ExecuteDbContextAsync(async (context) =>
         {
@@ -125,7 +147,7 @@ public class CategoryEndpointsTests : BaseIntegrationTest
         var request = new UpdateCategoryRequest("New Name", "New Description");
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/categories/{category.Id}", request);
+        var response = await adminClient.PutAsJsonAsync($"/categories/{category.Id}", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -135,12 +157,21 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     public async Task UpdateCategory_ShouldReturnNotFound_WhenDoesNotExist()
     {
         // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
         var request = new UpdateCategoryRequest("Name", "Desc");
 
         // Act
-        var response = await Client.PutAsJsonAsync($"/categories/{Guid.NewGuid()}", request);
+        var response = await adminClient.PutAsJsonAsync($"/categories/{Guid.NewGuid()}", request);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateCategory_ShouldReturnForbidden_WhenNotAdmin()
+    {
+        var request = new UpdateCategoryRequest("Name", "Desc");
+        var response = await Client.PutAsJsonAsync($"/categories/{Guid.NewGuid()}", request);
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
