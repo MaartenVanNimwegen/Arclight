@@ -43,7 +43,7 @@ public static class CategoryEndpoints
         }
         catch (InvalidOperationException ex)
         {
-            return Results.Conflict(new { message = ex.Message });
+            return Results.Conflict(new { error = ex.Message });
         }
     }
 
