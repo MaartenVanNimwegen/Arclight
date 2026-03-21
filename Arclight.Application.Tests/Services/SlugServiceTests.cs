@@ -103,4 +103,49 @@ public class SlugServiceTests
         await act.Should().ThrowAsync<ArgumentException>()
                  .WithMessage("Input cannot be empty.");
     }
+
+    [Fact]
+    public async Task GenerateUniqueSlugAsync_ShouldUseCategoryRepository_WhenTypeIsCategory()
+    {
+        // Arrange
+        var title = "Nieuwe Categorie";
+        var expectedBase = "nieuwe-categorie";
+
+        _categoryRepositoryMock.Setup(repo => repo.GetExistingSlugsAsync(expectedBase))
+                       .ReturnsAsync(new List<string>());
+
+        // Act
+        var result = await _sut.GenerateUniqueSlugAsync(title, SlugType.Category);
+
+        // Assert
+        result.Should().Be(expectedBase);
+        _categoryRepositoryMock.Verify(repo => repo.GetExistingSlugsAsync(expectedBase), Times.Once);
+        _articleRepositoryMock.Verify(repo => repo.GetExistingSlugsAsync(It.IsAny<string>()), Times.Never);
+    }
+
+    [Theory]
+    [InlineData("!!!")]
+    [InlineData("  @  ")]
+    public async Task GenerateUniqueSlugAsync_ShouldThrowArgumentException_WhenResultingSlugIsEmpty(string invalidTitle)
+    {
+        // Act
+        Func<Task> act = async () => await _sut.GenerateUniqueSlugAsync(invalidTitle, SlugType.Article);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>()
+                 .WithMessage("Input resulted in an empty slug.");
+    }
+
+    [Fact]
+    public async Task GenerateUniqueSlugAsync_ShouldThrowException_WhenSlugTypeIsInvalid()
+    {
+        // Arrange
+        var invalidType = (SlugType)999;
+
+        // Act
+        Func<Task> act = async () => await _sut.GenerateUniqueSlugAsync("test", invalidType);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
+    }
 }
