@@ -15,7 +15,13 @@ public abstract class BaseIntegrationTest : IClassFixture<CustomWebApplicationFa
         Client = factory.CreateClient();
     }
 
-    // Handige helper om direct met de database te praten in je "Arrange" fase
+    protected HttpClient CreateClientWithRoles(params string[] roles)
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Add(TestAuthHandler.RolesHeader, string.Join(",", roles));
+        return client;
+    }
+
     protected async Task ExecuteDbContextAsync(Func<AppDbContext, Task> action)
     {
         using var scope = Factory.Services.CreateScope();

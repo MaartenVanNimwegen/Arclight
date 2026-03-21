@@ -2,6 +2,7 @@
 using Arclight.Application.Interfaces;
 using Arclight.Application.Services;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 using FluentAssertions;
 using Moq;
 using System;
@@ -18,11 +19,9 @@ public class ArticleServiceTests
 
     public ArticleServiceTests()
     {
-        // Create mocks
         _articleRepoMock = new Mock<IArticleRepository>();
         _slugServiceMock = new Mock<ISlugService>();
 
-        // Inject the mocks to the service
         _sut = new ArticleService(_articleRepoMock.Object, _slugServiceMock.Object);
     }
     
@@ -39,7 +38,7 @@ public class ArticleServiceTests
         var verwachteSlug = "mijn-titel";
 
         _slugServiceMock
-            .Setup(s => s.GenerateUniqueSlugAsync(request.Title))
+            .Setup(s => s.GenerateUniqueSlugAsync(request.Title, SlugType.Article))
             .ReturnsAsync(verwachteSlug);
 
         // Act
@@ -64,17 +63,14 @@ public class ArticleServiceTests
         var categoryId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
 
-        // Let op: afhankelijk van hoe jouw CreateArticleRequest eruit ziet,
-        // pas je de constructor hier even aan zodat PublishNow op 'true' staat.
-        var request = new CreateArticleRequest("Titel", "Sum", "Content", categoryId, true); // <--- 'true' voor PublishNow
+        var request = new CreateArticleRequest("Titel", "Sum", "Content", categoryId, true);
 
-        _slugServiceMock.Setup(s => s.GenerateUniqueSlugAsync(request.Title)).ReturnsAsync("titel");
+        _slugServiceMock.Setup(s => s.GenerateUniqueSlugAsync(request.Title, SlugType.Article)).ReturnsAsync("titel");
 
         // Act
         await _sut.CreateArticleAsync(request, authorId);
 
         // Assert
-        // We checken nu of het artikel dat aan de database wordt gegeven, daadwerkelijk de status 'Published' heeft
         _articleRepoMock.Verify(repo => repo.AddAsync(It.Is<Article>(a =>
             a.IsPublished == true
         )), Times.Once);

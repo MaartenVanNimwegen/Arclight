@@ -69,6 +69,9 @@ namespace Arclight.Api
                 // To be RequireContentManager, user must have role Admin or ContentCreator
                 options.AddPolicy("RequireContentManager", policy =>
                     policy.RequireRole("Admin", "ContentCreator"));
+
+                options.AddPolicy("RequireAdmin", policy =>
+                    policy.RequireRole("Admin"));
             });
 
             builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -116,6 +119,7 @@ namespace Arclight.Api
             // Configure Endpoints
             app.MapUserEndpoints();
             app.MapArticleEndpoints();
+            app.MapCategoryEndpoints();
 
             app.Run();
         }

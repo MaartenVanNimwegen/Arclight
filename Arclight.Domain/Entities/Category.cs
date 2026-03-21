@@ -32,13 +32,11 @@ namespace Arclight.Domain.Entities
 
         // --- Domain Behaviors ---
 
-        public void UpdateDetails(string name, string slug, string? description)
+        public void Update(string name, string? description)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException("Name cannot be empty");
-            if (string.IsNullOrWhiteSpace(slug)) throw new ArgumentException("Slug cannot be empty");
 
             Name = name;
-            Slug = slug;
             Description = description;
 
             SetUpdatedDate();

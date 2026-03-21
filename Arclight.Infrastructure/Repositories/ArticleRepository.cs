@@ -52,4 +52,17 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     {
         context.Articles.Remove(article);
     }
+
+    public async Task<bool> HasArticlesInCategoryAsync(Guid categoryId)
+    {
+        return await context.Articles.AnyAsync(a => a.CategoryId == categoryId);
+    }
+
+    public async Task<List<string>> GetExistingSlugsAsync(string baseSlug)
+    {
+        return await context.Articles
+            .Where(a => a.Slug == baseSlug || a.Slug.StartsWith(baseSlug + "-"))
+            .Select(a => a.Slug)
+            .ToListAsync();
+    }
 }
