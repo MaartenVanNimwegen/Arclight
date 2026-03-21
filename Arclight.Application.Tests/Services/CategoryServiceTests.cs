@@ -2,6 +2,7 @@
 using Arclight.Application.Interfaces;
 using Arclight.Application.Services;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 using FluentAssertions;
 using Moq;
 using Xunit;
@@ -52,7 +53,7 @@ namespace Arclight.Application.Tests.Services
         {
             // Arrange
             var request = new CreateCategoryRequest("New Category", "Desc");
-            _slugServiceMock.Setup(s => s.GenerateUniqueSlugAsync(request.Name))
+            _slugServiceMock.Setup(s => s.GenerateUniqueSlugAsync(request.Name, SlugType.Category))
                 .ReturnsAsync("new-category");
 
             // Act

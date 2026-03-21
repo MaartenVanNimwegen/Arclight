@@ -1,72 +1,67 @@
 ﻿using Arclight.Application.Interfaces;
+using Arclight.Domain.Enums;
 using System.Text.RegularExpressions;
+using System.Text;
+using System.Globalization;
 
 namespace Arclight.Application.Services;
 
 public class SlugService(IArticleRepository articleRepository, ICategoryRepository categoryRepository) : ISlugService
 {
-    public async Task<string> GenerateUniqueArticleSlugAsync(string title)
+    public async Task<string> GenerateUniqueSlugAsync(string before, SlugType type)
     {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            throw new ArgumentException("Title cannot be empty.");
-        }
+        if (string.IsNullOrWhiteSpace(before))
+            throw new ArgumentException("Input cannot be empty.");
 
-        string slug = title.ToLowerInvariant();
-
-        slug = Regex.Replace(slug, @"\s+", "-");
-
-        slug = Regex.Replace(slug, @"[^a-z0-9\-]", "");
-
-        slug = Regex.Replace(slug, @"-+", "-").Trim('-');
-
-        if (string.IsNullOrEmpty(slug))
-        {
-            throw new ArgumentException("Title resulted in an invalid slug after normalisation.");
-        }
-
-        string baseSlug = slug;
-        string currentSlug = baseSlug;
-        int counter = 1;
-
-        while (await articleRepository.SlugExistsAsync(currentSlug))
-        {
-            // If "arclight-is-cool" exists, we try "arclight-is-cool-1", then "arclight-is-cool-2", etc.
-            currentSlug = $"{baseSlug}-{counter}";
-            counter++;
-        }
-
-        return currentSlug;
-    }
-
-    public async Task<string> GenerateUniqueCategorySlugAsync(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new ArgumentException("Name cannot be empty.");
-        }
-
-        // Make a base slug, for example: "Arclight is cool" will be "arclight-is-cool"
-        string baseSlug = name.ToLowerInvariant().Replace(" ", "-");
-
-        // Removes all characters that are not letters, numbers, or hyphens
-        baseSlug = Regex.Replace(baseSlug, @"[^a-z0-9\-]", "");
+        string baseSlug = PrepareSlug(before);
 
         if (string.IsNullOrEmpty(baseSlug))
+            throw new ArgumentException("Input resulted in an empty slug.");
+
+        List<string> existingSlugs = type switch
         {
-            throw new ArgumentException("Name resulted in an invalid slug after normalisation.");
+            SlugType.Article => await articleRepository.GetExistingSlugsAsync(baseSlug),
+            SlugType.Category => await categoryRepository.GetExistingSlugsAsync(baseSlug),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
+        };
+
+        if (!existingSlugs.Contains(baseSlug))
+        {
+            return baseSlug;
         }
 
-        // If slug exists, we add a number at the end until we find a unique one
-        string currentSlug = baseSlug;
         int counter = 1;
+        string candidateSlug;
 
-        while (await categoryRepository.SlugExistsAsync(currentSlug))
+        do
         {
-            currentSlug = $"{baseSlug}-{counter}";
+            candidateSlug = $"{baseSlug}-{counter}";
             counter++;
         }
+        while (existingSlugs.Contains(candidateSlug));
 
-        return currentSlug;
+        return candidateSlug;
+    }
+
+    private static string PrepareSlug(string input)
+    {
+        string normalized = input.ToLowerInvariant().Normalize(NormalizationForm.FormD);
+        var stringBuilder = new StringBuilder();
+
+        foreach (var c in normalized)
+        {
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+            {
+                stringBuilder.Append(c);
+            }
+        }
+
+        string slug = stringBuilder.ToString();
+
+        slug = Regex.Replace(slug, @"[^a-z0-9\s-]", "");
+        slug = Regex.Replace(slug, @"\s+", "-");
+        slug = Regex.Replace(slug, @"-+", "-");
+
+        return slug.Trim('-');
     }
 }

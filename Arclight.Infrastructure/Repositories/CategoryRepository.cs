@@ -47,5 +47,13 @@ namespace Arclight.Infrastructure.Repositories
         {
             await context.SaveChangesAsync();
         }
+
+        public async Task<List<string>> GetExistingSlugsAsync(string baseSlug)
+        {
+            return await context.Categories
+                .Where(a => a.Slug.StartsWith(baseSlug))
+                .Select(a => a.Slug)
+                .ToListAsync();
+        }
     }
 }

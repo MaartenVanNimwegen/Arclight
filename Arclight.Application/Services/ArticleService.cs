@@ -1,6 +1,7 @@
 ﻿using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 
 namespace Arclight.Application.Services;
 
@@ -46,7 +47,7 @@ public class ArticleService(IArticleRepository repository, ISlugService slugServ
     public async Task<Guid> CreateArticleAsync(CreateArticleRequest request, Guid authorId)
     {
         // Make a unique and URL-friendly slug based on the title
-        string uniqueSlug = await slugService.GenerateUniqueSlugAsync(request.Title);
+        string uniqueSlug = await slugService.GenerateUniqueSlugAsync(request.Title, SlugType.Article);
 
         // Create the article entity
         var article = new Article(

@@ -12,4 +12,5 @@ public interface ICategoryRepository
     Task<bool> SlugExistsAsync(string slug);
     Task AddAsync(Category category);
     Task SaveChangesAsync();
+    Task<List<string>> GetExistingSlugsAsync(string baseSlug);
 }

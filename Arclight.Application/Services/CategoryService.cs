@@ -1,6 +1,7 @@
 ﻿using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 
 namespace Arclight.Application.Services
 {
@@ -14,7 +15,7 @@ namespace Arclight.Application.Services
 
         public async Task<Guid> CreateCategoryAsync(CreateCategoryRequest request)
         {
-            string slug = await slugService.GenerateUniqueCategorySlugAsync(request.Name);
+            string slug = await slugService.GenerateUniqueSlugAsync(request.Name, SlugType.Category);
 
             var category = new Category(request.Name, slug, request.Description);
 

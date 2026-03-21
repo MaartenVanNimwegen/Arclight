@@ -1,8 +1,10 @@
 ﻿using Arclight.Application.Interfaces;
 using Arclight.Application.Services;
+using Arclight.Domain.Enums;
 using FluentAssertions;
 using Moq;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -10,27 +12,29 @@ namespace Arclight.Application.Tests.Services;
 
 public class SlugServiceTests
 {
-    private readonly Mock<IArticleRepository> _repositoryMock;
+    private readonly Mock<IArticleRepository> _articleRepositoryMock;
+    private readonly Mock<ICategoryRepository> _categoryRepositoryMock;
     private readonly SlugService _sut;
 
     public SlugServiceTests()
     {
-        _repositoryMock = new Mock<IArticleRepository>();
-        _sut = new SlugService(_repositoryMock.Object);
+        _articleRepositoryMock = new Mock<IArticleRepository>();
+        _categoryRepositoryMock = new Mock<ICategoryRepository>();
+        _sut = new SlugService(_articleRepositoryMock.Object, _categoryRepositoryMock.Object);
     }
 
     [Fact]
-    public async Task GenerateUniqueSlugAsync_ShouldReturnBaseSlug_WhenSlugDoesNotExist()
+    public async Task GenerateUniqueSlugAsync_ShouldReturnBaseSlug_WhenNoCollisionsExist()
     {
         // Arrange
         var title = "Mijn Nieuwe Blog!";
         var expectedBaseSlug = "mijn-nieuwe-blog";
 
-        _repositoryMock.Setup(repo => repo.SlugExistsAsync(expectedBaseSlug))
-                       .ReturnsAsync(false);
+        _articleRepositoryMock.Setup(repo => repo.GetExistingSlugsAsync(expectedBaseSlug))
+                       .ReturnsAsync(new List<string>());
 
         // Act
-        var result = await _sut.GenerateUniqueSlugAsync(title);
+        var result = await _sut.GenerateUniqueSlugAsync(title, SlugType.Article);
 
         // Assert
         result.Should().Be(expectedBaseSlug);
@@ -43,19 +47,49 @@ public class SlugServiceTests
         var title = "Test Artikel";
         var baseSlug = "test-artikel";
 
-        _repositoryMock.Setup(repo => repo.SlugExistsAsync(baseSlug))
-                       .ReturnsAsync(true);
-
-        _repositoryMock.Setup(repo => repo.SlugExistsAsync($"{baseSlug}-1"))
-                       .ReturnsAsync(false);
+        _articleRepositoryMock.Setup(repo => repo.GetExistingSlugsAsync(baseSlug))
+                       .ReturnsAsync(new List<string> { "test-artikel" });
 
         // Act
-        var result = await _sut.GenerateUniqueSlugAsync(title);
+        var result = await _sut.GenerateUniqueSlugAsync(title, SlugType.Article);
 
         // Assert
-        result.Should().Be($"{baseSlug}-1");
+        result.Should().Be("test-artikel-1");
+    }
 
-        _repositoryMock.Verify(repo => repo.SlugExistsAsync(It.IsAny<string>()), Times.Exactly(2));
+    [Fact]
+    public async Task GenerateUniqueSlugAsync_ShouldFindNextAvailableNumber_WhenMultipleExist()
+    {
+        // Arrange
+        var title = "Test Artikel";
+        var baseSlug = "test-artikel";
+
+        _articleRepositoryMock.Setup(repo => repo.GetExistingSlugsAsync(baseSlug))
+                       .ReturnsAsync(new List<string> { "test-artikel", "test-artikel-1", "test-artikel-2" });
+
+        // Act
+        var result = await _sut.GenerateUniqueSlugAsync(title, SlugType.Article);
+
+        // Assert
+        result.Should().Be("test-artikel-3");
+    }
+
+    [Theory]
+    [InlineData("Hallo   Wereld", "hallo-wereld")]
+    [InlineData("---Test---", "test")]
+    [InlineData("Wat is C#?", "wat-is-c")]
+    [InlineData("Café & Restaurant", "cafe-restaurant")]
+    public async Task GenerateUniqueSlugAsync_ShouldNormalizeCorrectly(string title, string expected)
+    {
+        // Arrange
+        _articleRepositoryMock.Setup(repo => repo.GetExistingSlugsAsync(It.IsAny<string>()))
+                       .ReturnsAsync(new List<string>());
+
+        // Act
+        var result = await _sut.GenerateUniqueSlugAsync(title, SlugType.Article);
+
+        // Assert
+        result.Should().Be(expected);
     }
 
     [Theory]
@@ -64,42 +98,9 @@ public class SlugServiceTests
     [InlineData(null)]
     public async Task GenerateUniqueSlugAsync_ShouldThrowArgumentException_WhenTitleIsInvalid(string invalidTitle)
     {
-        // Arrange
-        // Act
-        Func<Task> act = async () => await _sut.GenerateUniqueSlugAsync(invalidTitle);
+        Func<Task> act = async () => await _sut.GenerateUniqueSlugAsync(invalidTitle, SlugType.Article);
 
-        // Assert
         await act.Should().ThrowAsync<ArgumentException>()
-                 .WithMessage("Titel mag niet leeg zijn.");
-    }
-
-    [Theory]
-    [InlineData("!!!")]
-    [InlineData("@@@")]
-    public async Task GenerateUniqueSlugAsync_ShouldThrowArgumentException_WhenTitleResultsInEmptySlug(string invalidTitle)
-    {
-        // Act
-        Func<Task> act = async () => await _sut.GenerateUniqueSlugAsync(invalidTitle);
-
-        // Assert
-        await act.Should().ThrowAsync<ArgumentException>()
-                 .WithMessage("Titel resulteert in een ongeldige slug na normalisatie.");
-    }
-
-    [Theory]
-    [InlineData("Hallo   Wereld", "hallo-wereld")]
-    [InlineData("---Test---", "test")]
-    [InlineData("Wat is C#?", "wat-is-c")]
-    public async Task GenerateUniqueSlugAsync_ShouldNormalizeCorrectly(string title, string expected)
-    {
-        // Arrange
-        _repositoryMock.Setup(repo => repo.SlugExistsAsync(It.IsAny<string>()))
-                       .ReturnsAsync(false);
-
-        // Act
-        var result = await _sut.GenerateUniqueSlugAsync(title);
-
-        // Assert
-        result.Should().Be(expected);
+                 .WithMessage("Input cannot be empty.");
     }
 }

@@ -57,4 +57,12 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     {
         return await context.Articles.AnyAsync(a => a.CategoryId == categoryId);
     }
+
+    public async Task<List<string>> GetExistingSlugsAsync(string baseSlug)
+    {
+        return await context.Articles
+            .Where(a => a.Slug.StartsWith(baseSlug))
+            .Select(a => a.Slug)
+            .ToListAsync();
+    }
 }
