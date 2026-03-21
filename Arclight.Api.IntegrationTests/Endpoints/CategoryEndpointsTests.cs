@@ -62,13 +62,8 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     [Fact]
     public async Task CreateCategory_ShouldReturnForbidden_WhenNotAdmin()
     {
-        // Arrange
         var request = new CreateCategoryRequest("Lifestyle", "Everything about life");
-
-        // Act
         var response = await Client.PostAsJsonAsync("/categories", request);
-
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -132,13 +127,8 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     [Fact]
     public async Task DeleteCategory_ShouldReturnForbidden_WhenNotAdmin()
     {
-        // Arrange
         var randomId = Guid.NewGuid();
-
-        // Act
         var response = await Client.DeleteAsync($"/categories/{randomId}");
-
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 
@@ -180,13 +170,8 @@ public class CategoryEndpointsTests : BaseIntegrationTest
     [Fact]
     public async Task UpdateCategory_ShouldReturnForbidden_WhenNotAdmin()
     {
-        // Arrange
         var request = new UpdateCategoryRequest("Name", "Desc");
-
-        // Act
         var response = await Client.PutAsJsonAsync($"/categories/{Guid.NewGuid()}", request);
-
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
     }
 }
