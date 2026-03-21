@@ -22,7 +22,6 @@ public abstract class BaseIntegrationTest : IClassFixture<CustomWebApplicationFa
         return client;
     }
 
-    // Handige helper om direct met de database te praten in je "Arrange" fase
     protected async Task ExecuteDbContextAsync(Func<AppDbContext, Task> action)
     {
         using var scope = Factory.Services.CreateScope();
