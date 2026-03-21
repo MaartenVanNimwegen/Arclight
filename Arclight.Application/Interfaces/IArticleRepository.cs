@@ -11,4 +11,5 @@ public interface IArticleRepository
     Task SaveChangesAsync();
     Task<bool> SlugExistsAsync(string slug);
     void Delete(Article article);
+    Task<bool> HasArticlesInCategoryAsync(Guid categoryId);
 }

@@ -67,15 +67,13 @@ public class CategoryTests
         var category = new Category("Oud", "oud", "Oude omschrijving");
 
         var newName = "Nieuw";
-        var newSlug = "nieuw";
         var newDescription = "Nieuwe omschrijving";
 
         // Act
-        category.UpdateDetails(newName, newSlug, newDescription);
+        category.Update(newName, newDescription);
 
         // Assert
         category.Name.Should().Be(newName);
-        category.Slug.Should().Be(newSlug);
         category.Description.Should().Be(newDescription);
         category.UpdatedAt.Should().NotBeNull();
     }
@@ -90,27 +88,10 @@ public class CategoryTests
         var category = new Category("Geldige Naam", "geldige-slug");
 
         // Act
-        Action act = () => category.UpdateDetails(invalidName, "nieuwe-slug", "desc");
+        Action act = () => category.Update(invalidName, "desc");
 
         // Assert
         act.Should().Throw<ArgumentException>()
            .WithMessage("Name cannot be empty");
-    }
-
-    [Theory]
-    [InlineData("")]
-    [InlineData(" ")]
-    [InlineData(null)]
-    public void UpdateDetails_ShouldThrowArgumentException_WhenSlugIsInvalid(string invalidSlug)
-    {
-        // Arrange
-        var category = new Category("Geldige Naam", "geldige-slug");
-
-        // Act
-        Action act = () => category.UpdateDetails("Nieuwe Naam", invalidSlug, "desc");
-
-        // Assert
-        act.Should().Throw<ArgumentException>()
-           .WithMessage("Slug cannot be empty");
     }
 }

@@ -21,7 +21,8 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
         var claims = new[]
         {
             new Claim("sub", TestUserId), 
-            new Claim("role", "ContentCreator")
+            new Claim("role", "ContentCreator"),
+            new Claim("role", "Admin")
         };
 
         var identity = new ClaimsIdentity(claims, "TestAuth", "sub", "role");

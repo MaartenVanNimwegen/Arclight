@@ -4,7 +4,7 @@ using Arclight.Domain.Entities;
 
 namespace Arclight.Application.Services
 {
-    public class CategoryService(ICategoryRepository repository, ISlugService slugService) : ICategoryService
+    public class CategoryService(ICategoryRepository repository, IArticleRepository articleRepository, ISlugService slugService) : ICategoryService
     {
         public async Task<IEnumerable<CategoryResponse>> GetAllCategoriesAsync()
         {
@@ -14,7 +14,6 @@ namespace Arclight.Application.Services
 
         public async Task<Guid> CreateCategoryAsync(CreateCategoryRequest request)
         {
-            // Check of de naam al bestaat om dubbele slugs te voorkomen
             string slug = await slugService.GenerateUniqueSlugAsync(request.Name);
 
             var category = new Category(request.Name, slug, request.Description);
@@ -30,8 +29,26 @@ namespace Arclight.Application.Services
             var category = await repository.GetByIdAsync(id);
             if (category is null) return false;
 
-            // TODO: Check hier later of er nog artikelen in deze categorie zitten!
+            bool hasArticles = await articleRepository.HasArticlesInCategoryAsync(id);
+
+            if (hasArticles)
+            {
+                throw new InvalidOperationException("Cannot delete category because it still contains articles.");
+            }
+
             repository.Delete(category);
+            await repository.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> UpdateCategoryAsync(Guid id, UpdateCategoryRequest request)
+        {
+            var category = await repository.GetByIdAsync(id);
+            if (category is null) return false;
+
+            category.Update(request.Name, request.Description);
+
+            repository.Update(category);
             await repository.SaveChangesAsync();
             return true;
         }

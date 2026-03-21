@@ -52,4 +52,9 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     {
         context.Articles.Remove(article);
     }
+
+    public async Task<bool> HasArticlesInCategoryAsync(Guid categoryId)
+    {
+        return await context.Articles.AnyAsync(a => a.CategoryId == categoryId);
+    }
 }
