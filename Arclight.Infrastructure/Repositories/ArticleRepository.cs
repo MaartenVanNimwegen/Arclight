@@ -61,7 +61,7 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     public async Task<List<string>> GetExistingSlugsAsync(string baseSlug)
     {
         return await context.Articles
-            .Where(a => a.Slug.StartsWith(baseSlug))
+            .Where(a => a.Slug == baseSlug || a.Slug.StartsWith(baseSlug + "-"))
             .Select(a => a.Slug)
             .ToListAsync();
     }

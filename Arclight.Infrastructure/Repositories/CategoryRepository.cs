@@ -51,7 +51,7 @@ namespace Arclight.Infrastructure.Repositories
         public async Task<List<string>> GetExistingSlugsAsync(string baseSlug)
         {
             return await context.Categories
-                .Where(a => a.Slug.StartsWith(baseSlug))
+                .Where(a => a.Slug == baseSlug || a.Slug.StartsWith(baseSlug + "-"))
                 .Select(a => a.Slug)
                 .ToListAsync();
         }
