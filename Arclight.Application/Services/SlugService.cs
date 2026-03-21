@@ -17,6 +17,8 @@ public class SlugService(IArticleRepository repository) : ISlugService
 
         // Removes all characters that are not letters, numbers, or hyphens
         baseSlug = Regex.Replace(baseSlug, @"[^a-z0-9\-]", "");
+        // Removes all consecutive hyphens and trims hyphens from the start and end
+        baseSlug = Regex.Replace(baseSlug, @"-+", "-").Trim('-');
 
         if (string.IsNullOrEmpty(baseSlug))
         {
