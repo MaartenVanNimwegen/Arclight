@@ -12,26 +12,25 @@ public class SlugService(IArticleRepository repository) : ISlugService
             throw new ArgumentException("Titel mag niet leeg zijn.");
         }
 
-        // Make a base slug, for example: "Arclight is cool" will be "arclight-is-cool"
-        string baseSlug = title.ToLowerInvariant().Replace(" ", "-");
+        string slug = title.ToLowerInvariant();
 
-        // Removes all characters that are not letters, numbers, or hyphens
-        baseSlug = Regex.Replace(baseSlug, @"[^a-z0-9\-]", "");
-        // Removes all consecutive hyphens and trims hyphens from the start and end
-        baseSlug = Regex.Replace(baseSlug, @"-+", "-").Trim('-');
+        slug = Regex.Replace(slug, @"\s+", "-");
 
-        if (string.IsNullOrEmpty(baseSlug))
+        slug = Regex.Replace(slug, @"[^a-z0-9\-]", "");
+
+        slug = Regex.Replace(slug, @"-+", "-").Trim('-');
+
+        if (string.IsNullOrEmpty(slug))
         {
             throw new ArgumentException("Titel resulteert in een ongeldige slug na normalisatie.");
         }
 
-        // If slug exists, we add a number at the end until we find a unique one
+        string baseSlug = slug;
         string currentSlug = baseSlug;
         int counter = 1;
 
         while (await repository.SlugExistsAsync(currentSlug))
         {
-            // If "arclight-is-cool" exists, we try "arclight-is-cool-1", then "arclight-is-cool-2", etc.
             currentSlug = $"{baseSlug}-{counter}";
             counter++;
         }
