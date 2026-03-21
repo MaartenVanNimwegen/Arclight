@@ -6,6 +6,7 @@ namespace Arclight.Application.Interfaces
 {
     public interface ISlugService
     {
-        Task<string> GenerateUniqueSlugAsync(string title);    
+        Task<string> GenerateUniqueArticleSlugAsync(string title);    
+        Task<string> GenerateUniqueCategorySlugAsync(string name);
     }
 }

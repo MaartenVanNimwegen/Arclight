@@ -14,7 +14,7 @@ namespace Arclight.Application.Services
 
         public async Task<Guid> CreateCategoryAsync(CreateCategoryRequest request)
         {
-            string slug = await slugService.GenerateUniqueSlugAsync(request.Name);
+            string slug = await slugService.GenerateUniqueCategorySlugAsync(request.Name);
 
             var category = new Category(request.Name, slug, request.Description);
 

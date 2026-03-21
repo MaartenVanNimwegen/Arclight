@@ -61,7 +61,7 @@ public class CategoryTests
     // Update tests
 
     [Fact]
-    public void UpdateDetails_ShouldUpdateProperties_WhenValidDataProvided()
+    public void Update_ShouldUpdateProperties_WhenValidDataProvided()
     {
         // Arrange
         var category = new Category("Oud", "oud", "Oude omschrijving");
@@ -82,7 +82,7 @@ public class CategoryTests
     [InlineData("")]
     [InlineData(" ")]
     [InlineData(null)]
-    public void UpdateDetails_ShouldThrowArgumentException_WhenNameIsInvalid(string invalidName)
+    public void Update_ShouldThrowArgumentException_WhenNameIsInvalid(string invalidName)
     {
         // Arrange
         var category = new Category("Geldige Naam", "geldige-slug");

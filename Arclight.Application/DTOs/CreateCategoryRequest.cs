@@ -2,5 +2,5 @@
 
 public record CreateCategoryRequest(
     string Name,
-    string Description
+    string? Description
 );
