@@ -18,12 +18,14 @@ public class SlugService(IArticleRepository articleRepository, ICategoryReposito
         if (string.IsNullOrEmpty(baseSlug))
             throw new ArgumentException("Input resulted in an empty slug.");
 
-        List<string> existingSlugs = type switch
+        var slugList = type switch
         {
             SlugType.Article => await articleRepository.GetExistingSlugsAsync(baseSlug),
             SlugType.Category => await categoryRepository.GetExistingSlugsAsync(baseSlug),
             _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
+
+        var existingSlugs = new HashSet<string>(slugList, StringComparer.Ordinal);
 
         if (!existingSlugs.Contains(baseSlug))
         {

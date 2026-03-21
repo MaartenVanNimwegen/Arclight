@@ -148,4 +148,19 @@ public class SlugServiceTests
         // Assert
         await act.Should().ThrowAsync<ArgumentOutOfRangeException>();
     }
+
+    [Theory]
+    [InlineData("!!!")]
+    [InlineData("  @  ")]
+    [InlineData("😊😊😊")]
+    [InlineData("- - -")]
+    public async Task GenerateUniqueSlugAsync_ShouldThrowArgumentException_WhenNormalizationResultsInEmptySlug(string invalidTitle)
+    {
+        // Arrange & Act
+        Func<Task> act = async () => await _sut.GenerateUniqueSlugAsync(invalidTitle, SlugType.Article);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>()
+                 .WithMessage("Input resulted in an empty slug.");
+    }
 }
