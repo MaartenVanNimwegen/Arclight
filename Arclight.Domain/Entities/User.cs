@@ -13,7 +13,7 @@ public class User : Entity
     public UserRole Role { get; private set; }
     public UserStatus Status { get; private set; }
     public DateTimeOffset? LastLoggedinDate { get; private set; }
-    public string FullName => $"{FirstName}, {LastName}";
+    public string FullName => $"{FirstName} {LastName}";
 
     // Navigation property: A user can have authored multiple articles
     public IReadOnlyCollection<Article> Articles => _articles.AsReadOnly();

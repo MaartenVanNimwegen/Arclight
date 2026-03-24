@@ -21,7 +21,7 @@ public class UserTests
         user.PasswordHash.Should().Be("hash123");
         user.Role.Should().Be(UserRole.ContentCreator);
         user.Status.Should().Be(UserStatus.Active);
-        user.FullName.Should().Be("John, Doe");
+        user.FullName.Should().Be("John Doe");
         user.Articles.Should().NotBeNull();
     }
 
@@ -85,7 +85,7 @@ public class UserTests
 
         user.FirstName.Should().Be("NewFirst");
         user.LastName.Should().Be("NewLast");
-        user.FullName.Should().Be("NewFirst, NewLast");
+        user.FullName.Should().Be("NewFirst NewLast");
     }
 
     [Theory]

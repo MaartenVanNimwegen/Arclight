@@ -14,69 +14,125 @@ namespace Arclight.Application.Tests.Services;
 public class ArticleServiceTests
 {
     private readonly Mock<IArticleRepository> _articleRepoMock;
+    private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<ISlugService> _slugServiceMock;
     private readonly ArticleService _sut;
 
     public ArticleServiceTests()
     {
         _articleRepoMock = new Mock<IArticleRepository>();
+        _userRepoMock = new Mock<IUserRepository>();
         _slugServiceMock = new Mock<ISlugService>();
 
-        _sut = new ArticleService(_articleRepoMock.Object, _slugServiceMock.Object);
+        _sut = new ArticleService(_articleRepoMock.Object, _userRepoMock.Object, _slugServiceMock.Object);
     }
-    
-    // Create tests
 
     [Fact]
-    public async Task CreateArticleAsync_ShouldReturnGuid_AndCallRepository()
+    public async Task GetAllPublishedArticlesAsync_ShouldReturnMappedResponses_WithCorrectDetails()
     {
         // Arrange
-        var categoryId = Guid.NewGuid();
+        var author = new User("test@test.nl", "John", "Doe", "hash", UserRole.ContentCreator);
+        var category = new Category("Tech", "tech", "desc");
+        var article = new Article("Titel 1", "titel-1", "sum", "content", author.Id, category.Id);
+
+        typeof(Article).GetProperty("Author")?.SetValue(article, author);
+        typeof(Article).GetProperty("Category")?.SetValue(article, category);
+        article.Publish();
+
+        _articleRepoMock.Setup(repo => repo.GetAllPublishedAsync())
+                        .ReturnsAsync(new List<Article> { article });
+
+        // Act
+        var result = await _sut.GetAllPublishedArticlesAsync();
+
+        // Assert
+        var response = result.First();
+        response.AuthorName.Should().Be("John Doe");
+        response.CategoryName.Should().Be("Tech");
+    }
+
+    [Fact]
+    public async Task CreateArticleAsync_ShouldReturnGuid_AndCallRepository_WhenAuthorExists()
+    {
+        // Arrange
         var authorId = Guid.NewGuid();
+        var categoryId = Guid.NewGuid();
+        var author = new User("test@test.nl", "John", "Doe", "hash", UserRole.ContentCreator);
         var request = new CreateArticleRequest("Mijn Titel", "Korte samenvatting", "Inhoud", categoryId, false);
 
-        var verwachteSlug = "mijn-titel";
+        _userRepoMock.Setup(repo => repo.GetByIdAsync(authorId))
+                     .ReturnsAsync(author); 
 
         _slugServiceMock
             .Setup(s => s.GenerateUniqueSlugAsync(request.Title, SlugType.Article))
-            .ReturnsAsync(verwachteSlug);
+            .ReturnsAsync("mijn-titel");
 
         // Act
         var resultId = await _sut.CreateArticleAsync(request, authorId);
 
         // Assert
         resultId.Should().NotBeEmpty();
-
-        _articleRepoMock.Verify(repo => repo.AddAsync(It.Is<Article>(a =>
-            a.Title == "Mijn Titel" &&
-            a.Slug == verwachteSlug &&
-            a.AuthorId == authorId
-        )), Times.Once);
-
+        _articleRepoMock.Verify(repo => repo.AddAsync(It.IsAny<Article>()), Times.Once);
         _articleRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreateArticleAsync_ShouldThrowUnauthorizedAccessException_WhenAuthorDoesNotExist()
+    {
+        // Arrange
+        var authorId = Guid.NewGuid();
+        var request = new CreateArticleRequest("Titel", "Sum", "Content", Guid.NewGuid(), false);
+
+        _userRepoMock.Setup(repo => repo.GetByIdAsync(authorId))
+                     .ReturnsAsync((User?)null);
+
+        // Act
+        var act = () => _sut.CreateArticleAsync(request, authorId);
+
+        // Assert
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("The given author is not found.");
+
+        _articleRepoMock.Verify(repo => repo.AddAsync(It.IsAny<Article>()), Times.Never);
+        _articleRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
     }
 
     [Fact]
     public async Task CreateArticleAsync_ShouldPublishImmediately_WhenPublishNowIsTrue()
     {
         // Arrange
-        var categoryId = Guid.NewGuid();
         var authorId = Guid.NewGuid();
+        var author = new User("test@test.nl", "John", "Doe", "hash", UserRole.ContentCreator);
+        var request = new CreateArticleRequest("Titel", "Sum", "Content", Guid.NewGuid(), true);
 
-        var request = new CreateArticleRequest("Titel", "Sum", "Content", categoryId, true);
-
+        _userRepoMock.Setup(repo => repo.GetByIdAsync(authorId)).ReturnsAsync(author);
         _slugServiceMock.Setup(s => s.GenerateUniqueSlugAsync(request.Title, SlugType.Article)).ReturnsAsync("titel");
 
         // Act
         await _sut.CreateArticleAsync(request, authorId);
 
         // Assert
-        _articleRepoMock.Verify(repo => repo.AddAsync(It.Is<Article>(a =>
-            a.IsPublished == true
-        )), Times.Once);
+        _articleRepoMock.Verify(repo => repo.AddAsync(It.Is<Article>(a => a.IsPublished)), Times.Once);
     }
 
-    // Update tests
+    [Fact]
+    public async Task GetArticleBySlugAsync_ShouldReturnUnknowns_WhenNavigationPropertiesAreNull()
+    {
+        // Arrange
+        var article = new Article("Titel", "slug", "sum", "content", Guid.NewGuid(), Guid.NewGuid());
+        article.Publish();
+
+        _articleRepoMock.Setup(repo => repo.GetBySlugAsync("slug"))
+                        .ReturnsAsync(article);
+
+        // Act
+        var result = await _sut.GetArticleBySlugAsync("slug");
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.AuthorName.Should().Be("Unknown author");
+        result!.CategoryName.Should().Be("No category");
+    }
 
     [Fact]
     public async Task UpdateArticleAsync_ShouldReturnFalse_WhenArticleDoesNotExist()

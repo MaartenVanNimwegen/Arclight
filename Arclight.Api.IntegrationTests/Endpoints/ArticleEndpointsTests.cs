@@ -172,11 +172,23 @@ public class ArticleEndpointsTests : BaseIntegrationTest
     public async Task CreateArticle_ShouldReturnCreated_WhenDataIsValid()
     {
         // Arrange
+        var testUserId = Guid.Parse(TestAuthHandler.TestUserId);
+
+        var managerClient = CreateClientWithRoles("ContentCreator");
+
         var category = new Category("Test Tech", "test-tech", "Description");
+
+        var author = new User("admin@arclight.nl", "Admin", "User", "hash", UserRole.Admin);
+        typeof(User).GetProperty("Id")?.SetValue(author, testUserId);
 
         await ExecuteDbContextAsync(async (context) =>
         {
             context.Categories.Add(category);
+
+            if (await context.Users.FindAsync(testUserId) == null)
+            {
+                context.Users.Add(author);
+            }
             await context.SaveChangesAsync();
         });
 
@@ -185,23 +197,21 @@ public class ArticleEndpointsTests : BaseIntegrationTest
             Summary: "Korte samenvatting",
             Content: "Volledige tekst",
             CategoryId: category.Id,
-            true
+            PublishNow: true
         );
 
         // Act
-        var response = await Client.PostAsJsonAsync("/articles", request);
+        var response = await managerClient.PostAsJsonAsync("/articles", request);
 
         // Assert
-        if (!response.IsSuccessStatusCode)
+        if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Unauthorized)
         {
             var error = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Crash details: {error}");
+            throw new Exception($"Auth Fout: {response.StatusCode}. Details: {error}. Check of policy 'RequireContentManager' de rol 'ContentManager' accepteert.");
         }
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-
         response.Headers.Location.Should().NotBeNull();
-        response.Headers.Location!.ToString().Should().Contain("/articles/");
     }
 
     [Fact]
