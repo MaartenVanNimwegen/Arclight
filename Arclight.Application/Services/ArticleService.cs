@@ -5,11 +5,11 @@ using Arclight.Domain.Enums;
 
 namespace Arclight.Application.Services;
 
-public class ArticleService(IArticleRepository repository, ISlugService slugService) : IArticleService
+public class ArticleService(IArticleRepository articleRepository, IUserRepository userRepository, ISlugService slugService) : IArticleService
 {
     public async Task<IEnumerable<ArticleResponse>> GetAllPublishedArticlesAsync()
     {
-        IEnumerable<Article> articles = await repository.GetAllPublishedAsync();
+        IEnumerable<Article> articles = await articleRepository.GetAllPublishedAsync();
 
         return articles.Select(a => new ArticleResponse(
             a.Id,
@@ -25,7 +25,7 @@ public class ArticleService(IArticleRepository repository, ISlugService slugServ
 
     public async Task<ArticleResponse?> GetArticleBySlugAsync(string slug)
     {
-        Article? article = await repository.GetBySlugAsync(slug);
+        Article? article = await articleRepository.GetBySlugAsync(slug);
 
         if (article is null || !article.IsPublished)
         {
@@ -46,10 +46,13 @@ public class ArticleService(IArticleRepository repository, ISlugService slugServ
 
     public async Task<Guid> CreateArticleAsync(CreateArticleRequest request, Guid authorId)
     {
-        // Make a unique and URL-friendly slug based on the title
+        if (await userRepository.GetByIdAsync(authorId) is null)    
+        {
+            throw new KeyNotFoundException("The given author is not found.");
+        }
+
         string uniqueSlug = await slugService.GenerateUniqueSlugAsync(request.Title, SlugType.Article);
 
-        // Create the article entity
         var article = new Article(
             request.Title,
             uniqueSlug,
@@ -59,22 +62,20 @@ public class ArticleService(IArticleRepository repository, ISlugService slugServ
             request.CategoryId
         );
 
-        // if publishNow is true, publish the article immediately, else make it a draft
-        if ( request.PublishNow)
+        if (request.PublishNow)
         {
             article.Publish();
         }
 
-        // Save the article to the database
-        await repository.AddAsync(article);
-        await repository.SaveChangesAsync();
+        await articleRepository.AddAsync(article);
+        await articleRepository.SaveChangesAsync();
 
         return article.Id;
     }
 
     public async Task<bool> UpdateArticleAsync(Guid id, UpdateArticleRequest request)
     {
-        var article = await repository.GetByIdAsync(id);
+        var article = await articleRepository.GetByIdAsync(id);
 
         if (article is null)
         {
@@ -83,21 +84,21 @@ public class ArticleService(IArticleRepository repository, ISlugService slugServ
 
         article.UpdateContent(request.Title, article.Slug, request.Summary, request.Content, request.CategoryId);
 
-        await repository.SaveChangesAsync();
+        await articleRepository.SaveChangesAsync();
         return true;
     }
 
     public async Task<bool> DeleteArticleAsync(Guid id)
     {
-        var article = await repository.GetByIdAsync(id);
+        var article = await articleRepository.GetByIdAsync(id);
 
         if (article is null)
         {
             return false;
         }
 
-        repository.Delete(article);
-        await repository.SaveChangesAsync();
+        articleRepository.Delete(article);
+        await articleRepository.SaveChangesAsync();
         return true;
     }
 }
