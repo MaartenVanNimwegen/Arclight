@@ -71,7 +71,7 @@ public class ArticleServiceTests
         var act = () => _sut.CreateArticleAsync(request, authorId);
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+        await act.Should().ThrowAsync<KeyNotFoundException>()
             .WithMessage("The given author is not found.");
 
         _articleRepoMock.Verify(repo => repo.AddAsync(It.IsAny<Article>()), Times.Never);
