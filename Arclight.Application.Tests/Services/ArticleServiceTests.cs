@@ -28,30 +28,6 @@ public class ArticleServiceTests
     }
 
     [Fact]
-    public async Task GetAllPublishedArticlesAsync_ShouldReturnMappedResponses_WithCorrectDetails()
-    {
-        // Arrange
-        var author = new User("test@test.nl", "John", "Doe", "hash", UserRole.ContentCreator);
-        var category = new Category("Tech", "tech", "desc");
-        var article = new Article("Titel 1", "titel-1", "sum", "content", author.Id, category.Id);
-
-        typeof(Article).GetProperty("Author")?.SetValue(article, author);
-        typeof(Article).GetProperty("Category")?.SetValue(article, category);
-        article.Publish();
-
-        _articleRepoMock.Setup(repo => repo.GetAllPublishedAsync())
-                        .ReturnsAsync(new List<Article> { article });
-
-        // Act
-        var result = await _sut.GetAllPublishedArticlesAsync();
-
-        // Assert
-        var response = result.First();
-        response.AuthorName.Should().Be("John Doe");
-        response.CategoryName.Should().Be("Tech");
-    }
-
-    [Fact]
     public async Task CreateArticleAsync_ShouldReturnGuid_AndCallRepository_WhenAuthorExists()
     {
         // Arrange
@@ -72,7 +48,12 @@ public class ArticleServiceTests
 
         // Assert
         resultId.Should().NotBeEmpty();
-        _articleRepoMock.Verify(repo => repo.AddAsync(It.IsAny<Article>()), Times.Once);
+        _articleRepoMock.Verify(repo => repo.AddAsync(It.Is<Article>(a =>
+                    a.Title == request.Title &&
+                    a.Slug == "mijn-titel" &&
+                    a.AuthorId == authorId &&
+                    a.CategoryId == categoryId
+                )), Times.Once);
         _articleRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
     }
 

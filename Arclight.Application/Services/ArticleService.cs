@@ -46,10 +46,9 @@ public class ArticleService(IArticleRepository articleRepository, IUserRepositor
 
     public async Task<Guid> CreateArticleAsync(CreateArticleRequest request, Guid authorId)
     {
-        var author = await userRepository.GetByIdAsync(authorId);
-        if (author is null)
+        if (await userRepository.GetByIdAsync(authorId) is null)    
         {
-            throw new UnauthorizedAccessException("The given author is not found.");
+            throw new KeyNotFoundException("The given author is not found.");
         }
 
         string uniqueSlug = await slugService.GenerateUniqueSlugAsync(request.Title, SlugType.Article);

@@ -174,12 +174,11 @@ public class ArticleEndpointsTests : BaseIntegrationTest
         // Arrange
         var testUserId = Guid.Parse(TestAuthHandler.TestUserId);
 
-        var managerClient = CreateClientWithRoles("ContentCreator");
+        var contentCreatorClient = CreateClientWithRoles("ContentCreator");
 
         var category = new Category("Test Tech", "test-tech", "Description");
 
-        var author = new User("admin@arclight.nl", "Admin", "User", "hash", UserRole.Admin);
-        typeof(User).GetProperty("Id")?.SetValue(author, testUserId);
+        var author = new User(testUserId, "admin@arclight.nl", "Admin", "User", "hash", UserRole.Admin, UserStatus.Active);
 
         await ExecuteDbContextAsync(async (context) =>
         {
@@ -201,13 +200,13 @@ public class ArticleEndpointsTests : BaseIntegrationTest
         );
 
         // Act
-        var response = await managerClient.PostAsJsonAsync("/articles", request);
+        var response = await contentCreatorClient.PostAsJsonAsync("/articles", request);
 
         // Assert
         if (response.StatusCode == HttpStatusCode.Forbidden || response.StatusCode == HttpStatusCode.Unauthorized)
         {
             var error = await response.Content.ReadAsStringAsync();
-            throw new Exception($"Auth Fout: {response.StatusCode}. Details: {error}. Check of policy 'RequireContentManager' de rol 'ContentManager' accepteert.");
+            throw new Exception($"Auth error: {response.StatusCode}. Details: {error}. Check if policy 'RequireContentManager' accepts 'ContentManager' or 'Admin'.");
         }
 
         response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -217,7 +216,7 @@ public class ArticleEndpointsTests : BaseIntegrationTest
     [Fact]
     public async Task CreateArticle_ShouldReturnBadRequest_WhenCategoryDoesNotExist()
     {
-        // Arrange - We gebruiken een willekeurige GUID die NIET in de DB staat
+        // Arrange
         var request = new CreateArticleRequest("Title", "Summary", "Content", Guid.NewGuid(), true);
 
         // Act
