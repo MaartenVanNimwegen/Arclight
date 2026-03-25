@@ -5,28 +5,29 @@ using Arclight.Domain.Enums;
 
 namespace Arclight.Application.Services;
 
-public interface IUserService
-{
-    Task<Guid> CreateUserAsync(string email, string firstName, string lastName, string password, UserRole role);
-    Task<User?> GetUserAsync(Guid id);
-    Task<string?> LoginAsync(LoginRequest request);
-}
-
 public class UserService(IUserRepository repository, IJwtTokenGenerator tokenGenerator) : IUserService
 {
     public async Task<Guid> CreateUserAsync(string email, string firstName, string lastName, string password, UserRole role)
     {
-        // Hash the password using BCrypt
+        // 1. Check if a user with the same email already exists
+        User? existingUser = await repository.GetByEmailAsync(email);
+        if (existingUser is not null)
+        {
+            // Throw an exception or return an error indicating that the email is already in use. This exception should be caught and handled by the caller to return an appropriate response to the client.
+            throw new InvalidOperationException("Email address is already in use."); 
+        }
+
+        // 2. Hash the password using BCrypt
         string passwordHash = BCrypt.Net.BCrypt.HashPassword(password);
 
-        // Create the user entity
-        var user = new User(email, firstName, lastName, passwordHash, role);
+        // 3. Create the user entity
+        User user = new(email, firstName, lastName, passwordHash, role);
 
-        // Save the user to the repository
+        // 4. Save the user to the repository
         await repository.AddAsync(user);
         await repository.SaveChangesAsync();
 
-        // Return the newly created user's Id
+        // 5. Return the newly created user's Id
         return user.Id;
     }
 
@@ -37,7 +38,7 @@ public class UserService(IUserRepository repository, IJwtTokenGenerator tokenGen
 
     public async Task<string?> LoginAsync(LoginRequest request)
     {
-        var user = await repository.GetByEmailAsync(request.Email);
+        User? user = await repository.GetByEmailAsync(request.Email);
 
         // Check 1: Does the user exist?
         if (user is null)

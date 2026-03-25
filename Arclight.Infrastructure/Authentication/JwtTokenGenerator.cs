@@ -41,7 +41,7 @@ namespace Arclight.Infrastructure.Authentication
                 issuer: configuration["JwtSettings:Issuer"],
                 audience: configuration["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(60), // Token has a lifetime of 60 minutes
+                expires: DateTime.UtcNow.AddMinutes(30), // Token has a lifetime of 30 minutes
                 signingCredentials: creds
             );
 
