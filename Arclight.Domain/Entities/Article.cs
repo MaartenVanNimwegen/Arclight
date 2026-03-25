@@ -19,6 +19,8 @@ namespace Arclight.Domain.Entities
         public User? Author { get; private set; }
         public Category? Category { get; private set; }
 
+        public ICollection<Comment> Comments { get; private set; } = new List<Comment>();
+
         /// <summary>
         /// Default constructor for creating a new Article
         /// </summary>

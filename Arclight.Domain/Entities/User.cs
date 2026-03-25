@@ -19,6 +19,8 @@ public class User : Entity
     public IReadOnlyCollection<Article> Articles => _articles.AsReadOnly();
     private readonly List<Article> _articles = new();
 
+    public ICollection<Comment> Comments { get; private set; } = new List<Comment>();
+
     /// <summary>
     /// Default constructor for creating new Users
     /// </summary>

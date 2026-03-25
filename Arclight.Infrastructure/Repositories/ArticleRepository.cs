@@ -50,7 +50,7 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
 
     public void Delete(Article article)
     {
-        context.Articles.Remove(article);
+            context.Articles.Remove(article);
     }
 
     public async Task<bool> HasArticlesInCategoryAsync(Guid categoryId)
