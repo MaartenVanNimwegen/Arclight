@@ -57,7 +57,7 @@ jobs:
         path: code-coverage-results.md
 
     - name: Archive Coverage Badge
-      uses: EndBug/add-and-commit@v9
+      uses: EndBug/add-and-commit@v10
       if: github.ref == 'refs/heads/master'
       with:
         author_name: GitHub Actions
