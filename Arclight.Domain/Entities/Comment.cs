@@ -5,8 +5,6 @@ namespace Arclight.Domain.Entities
     public class Comment : Entity
     {
         public string Text { get; private set; }
-
-        // --- Foreign Keys ---
         public Guid ArticleId { get; private set; }
         public Guid UserId { get; private set; }
 

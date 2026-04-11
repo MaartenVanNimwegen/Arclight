@@ -7,14 +7,11 @@ namespace Arclight.Infrastructure.Repositories;
 
 public class CommentRepository(AppDbContext context) : ICommentRepository
 {
-    public async Task AddAsync(Comment comment)
+    public async Task<Comment?> GetByIdAsync(Guid commentId)
     {
-        await context.Comments.AddAsync(comment);
-    }
-
-    public void Delete(Comment comment)
-    {
-        context.Comments.Remove(comment);
+        return await context.Comments
+            .Include(c => c.User)
+            .FirstOrDefaultAsync(c => c.Id == commentId);
     }
 
     public async Task<IEnumerable<Comment>> GetByArticleIdAsync(Guid articleId)
@@ -26,11 +23,14 @@ public class CommentRepository(AppDbContext context) : ICommentRepository
             .ToListAsync();
     }
 
-    public async Task<Comment?> GetByIdAsync(Guid commentId)
+    public async Task AddAsync(Comment comment)
     {
-        return await context.Comments
-            .Include(c => c.User)
-            .FirstOrDefaultAsync(c => c.Id == commentId);
+        await context.Comments.AddAsync(comment);
+    }
+
+    public void Delete(Comment comment)
+    {
+        context.Comments.Remove(comment);
     }
 
     public async Task SaveChangesAsync()

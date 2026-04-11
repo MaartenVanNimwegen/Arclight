@@ -22,6 +22,13 @@ public abstract class BaseIntegrationTest : IClassFixture<CustomWebApplicationFa
         return client;
     }
 
+    protected HttpClient CreateAnonymousClient()
+    {
+        var client = Factory.CreateClient();
+        client.DefaultRequestHeaders.Add("X-Skip-Test-Auth", "true");
+        return client;
+    }
+
     protected async Task ExecuteDbContextAsync(Func<AppDbContext, Task> action)
     {
         using var scope = Factory.Services.CreateScope();

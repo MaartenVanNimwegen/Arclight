@@ -120,6 +120,7 @@ namespace Arclight.Api
             app.MapUserEndpoints();
             app.MapArticleEndpoints();
             app.MapCategoryEndpoints();
+            app.MapCommentEndpoints();
 
             app.Run();
         }

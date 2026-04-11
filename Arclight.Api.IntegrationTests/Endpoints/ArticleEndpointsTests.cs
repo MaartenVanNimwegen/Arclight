@@ -207,7 +207,7 @@ public class ArticleEndpointsTests : BaseIntegrationTest
     [Fact]
     public async Task CreateArticle_ShouldReturnBadRequest_WhenCategoryDoesNotExist()
     {
-        // Arrange - We gebruiken een willekeurige GUID die NIET in de DB staat
+        // Arrange
         var request = new CreateArticleRequest("Title", "Summary", "Content", Guid.NewGuid(), true);
 
         // Act
