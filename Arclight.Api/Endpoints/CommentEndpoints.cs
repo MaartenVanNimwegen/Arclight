@@ -2,6 +2,7 @@
 using Arclight.Application.Interfaces;
 using System.Security.Claims;
 
+namespace Arclight.Api.Endpoints;
 public static class CommentEndpoints
 {
     public static void MapCommentEndpoints(this IEndpointRouteBuilder app)
