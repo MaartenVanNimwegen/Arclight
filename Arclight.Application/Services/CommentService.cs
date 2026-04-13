@@ -1,6 +1,9 @@
-﻿using Arclight.Application.Interfaces;
+﻿using Arclight.Application.DTOs;
+using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
+
+namespace Arclight.Application.Services;
 
 public class CommentService(
     ICommentRepository commentRepository,
@@ -47,11 +50,12 @@ public class CommentService(
         ));
     }
 
-    public async Task<bool> DeleteCommentAsync(Guid commentId, Guid currentUserId, UserRole currentUserRole)
+    public async Task<bool> DeleteCommentAsync(Guid articleId, Guid commentId, Guid currentUserId, UserRole currentUserRole)
     {
         var comment = await commentRepository.GetByIdAsync(commentId);
 
         if (comment is null) return false;
+        if (comment.ArticleId != articleId) return false;
 
         bool isOwner = comment.UserId == currentUserId;
         bool isStaff = currentUserRole == UserRole.Admin || currentUserRole == UserRole.ContentCreator;

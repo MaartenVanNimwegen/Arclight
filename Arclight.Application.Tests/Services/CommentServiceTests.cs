@@ -1,4 +1,6 @@
-﻿using Arclight.Application.Interfaces;
+﻿using Arclight.Application.DTOs;
+using Arclight.Application.Interfaces;
+using Arclight.Application.Services;
 using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
 using FluentAssertions;
@@ -130,13 +132,14 @@ public class CommentServiceTests
         // Arrange
         var commentId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var comment = new Comment("X", Guid.NewGuid(), userId);
+        var articleId = Guid.NewGuid();
+        var comment = new Comment("X", articleId, userId);
 
         _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
                         .ReturnsAsync(comment);
 
         // Act
-        var result = await _sut.DeleteCommentAsync(commentId, userId, UserRole.User);
+        var result = await _sut.DeleteCommentAsync(articleId, commentId, userId, UserRole.User);
 
         // Assert
         result.Should().BeTrue();
@@ -151,13 +154,14 @@ public class CommentServiceTests
         var commentId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
         var adminId = Guid.NewGuid();
-        var comment = new Comment("X", Guid.NewGuid(), ownerId);
+        var articleId = Guid.NewGuid();
+        var comment = new Comment("X", articleId, ownerId);
 
         _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
                         .ReturnsAsync(comment);
 
         // Act
-        var result = await _sut.DeleteCommentAsync(commentId, adminId, UserRole.Admin);
+        var result = await _sut.DeleteCommentAsync(articleId, commentId, adminId, UserRole.Admin);
 
         // Assert
         result.Should().BeTrue();
@@ -173,11 +177,32 @@ public class CommentServiceTests
                         .ReturnsAsync((Comment?)null);
 
         // Act
-        var result = await _sut.DeleteCommentAsync(commentId, Guid.NewGuid(), UserRole.Admin);
+        var result = await _sut.DeleteCommentAsync(Guid.NewGuid(), commentId, Guid.NewGuid(), UserRole.Admin);
 
         // Assert
         result.Should().BeFalse();
         _commentRepoMock.Verify(repo => repo.Delete(It.IsAny<Comment>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_ShouldReturnFalse_WhenCommentDoesNotBelongToArticle()
+    {
+        // Arrange
+        var commentId = Guid.NewGuid();
+        var articleId = Guid.NewGuid();
+        var differentArticleId = Guid.NewGuid();
+        var comment = new Comment("X", articleId, Guid.NewGuid());
+
+        _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
+                        .ReturnsAsync(comment);
+
+        // Act
+        var result = await _sut.DeleteCommentAsync(differentArticleId, commentId, Guid.NewGuid(), UserRole.Admin);
+
+        // Assert
+        result.Should().BeFalse();
+        _commentRepoMock.Verify(repo => repo.Delete(It.IsAny<Comment>()), Times.Never);
+        _commentRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
     }
 
     [Fact]
@@ -187,13 +212,14 @@ public class CommentServiceTests
         var commentId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
         var otherUserId = Guid.NewGuid();
-        var comment = new Comment("X", Guid.NewGuid(), ownerId);
+        var articleId = Guid.NewGuid();
+        var comment = new Comment("X", articleId, ownerId);
 
         _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
                         .ReturnsAsync(comment);
 
         // Act
-        var act = () => _sut.DeleteCommentAsync(commentId, otherUserId, UserRole.User);
+        var act = () => _sut.DeleteCommentAsync(articleId, commentId, otherUserId, UserRole.User);
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedAccessException>()

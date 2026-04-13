@@ -114,7 +114,7 @@ public class CommentEndpointsTests(CustomWebApplicationFactory factory) : BaseIn
     }
 
     [Fact]
-    public async Task DeleteComment_ShouldReturnBadRequest_WhenCommentDoesNotExist()
+    public async Task DeleteComment_ShouldReturnNotFound_WhenCommentDoesNotExist()
     {
         // Arrange
         var articleId = await SeedArticleAsync();
@@ -122,6 +122,45 @@ public class CommentEndpointsTests(CustomWebApplicationFactory factory) : BaseIn
 
         // Act
         var response = await client.DeleteAsync($"/articles/{articleId}/comments/{Guid.NewGuid()}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteComment_ShouldReturnNotFound_WhenCommentBelongsToDifferentArticle()
+    {
+        // Arrange
+        var articleId = await SeedArticleAsync();
+        var otherArticleId = Guid.NewGuid();
+        var commentId = Guid.NewGuid();
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            var comment = new Comment("Mijn comment", articleId, _testUserId);
+            typeof(Comment).GetProperty("Id")?.SetValue(comment, commentId);
+            context.Comments.Add(comment);
+            await context.SaveChangesAsync();
+        });
+
+        var client = CreateClientWithRoles("Admin");
+
+        // Act
+        var response = await client.DeleteAsync($"/articles/{otherArticleId}/comments/{commentId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task CreateComment_ShouldReturnBadRequest_WhenTextIsEmpty()
+    {
+        // Arrange
+        var articleId = await SeedArticleAsync();
+        var client = CreateClientWithRoles("Reader");
+
+        // Act
+        var response = await client.PostAsJsonAsync($"/articles/{articleId}/comments", new CreateCommentRequest(""));
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

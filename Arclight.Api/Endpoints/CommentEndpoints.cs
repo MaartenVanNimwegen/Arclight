@@ -1,4 +1,6 @@
 ﻿using Arclight.Api.Extensions;
+using Arclight.Api.Filters;
+using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using System.Security.Claims;
 
@@ -10,7 +12,8 @@ public static class CommentEndpoints
         var group = app.MapGroup("/articles/{articleId:guid}/comments");
 
         group.MapPost("", CreateComment)
-            .RequireAuthorization();
+            .RequireAuthorization()
+            .AddEndpointFilter<ValidationFilter<CreateCommentRequest>>();
 
         group.MapGet("", GetCommentsByArticleId)
             .AllowAnonymous();
@@ -36,8 +39,8 @@ public static class CommentEndpoints
 
         try
         {
-            var success = await service.DeleteCommentAsync(commentId, userId, role);
-            return success ? Results.Ok() : Results.BadRequest();
+            var success = await service.DeleteCommentAsync(articleId, commentId, userId, role);
+            return success ? Results.Ok() : Results.NotFound();
         }
         catch (UnauthorizedAccessException)
         {
