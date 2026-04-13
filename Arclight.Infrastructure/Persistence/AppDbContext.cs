@@ -47,12 +47,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<Comment>(entity =>
         {
             entity.HasOne(c => c.Article)
-                .WithMany() 
+                .WithMany(a => a.Comments)
                 .HasForeignKey(c => c.ArticleId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasOne(c => c.User)
-                .WithMany()
+                .WithMany(u => u.Comments)
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
