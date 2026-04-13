@@ -10,6 +10,7 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     public async Task<IEnumerable<Article>> GetAllPublishedAsync()
     {
         return await context.Articles
+            .AsNoTracking()
             .Include(a => a.Author)      // Retrieve the Author data
             .Include(a => a.Category)    // Retrieve the Category data
             .Where(a => a.IsPublished)   // Retrieve only published articles
@@ -20,6 +21,7 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     public async Task<Article?> GetBySlugAsync(string slug)
     {
         return await context.Articles
+            .AsNoTracking()
             .Include(a => a.Author)
             .Include(a => a.Category)
             .FirstOrDefaultAsync(a => a.Slug == slug);
@@ -50,7 +52,7 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
 
     public void Delete(Article article)
     {
-        context.Articles.Remove(article);
+            context.Articles.Remove(article);
     }
 
     public async Task<bool> HasArticlesInCategoryAsync(Guid categoryId)
@@ -64,5 +66,10 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
             .Where(a => a.Slug == baseSlug || a.Slug.StartsWith(baseSlug + "-"))
             .Select(a => a.Slug)
             .ToListAsync();
+    }
+
+    public Task<bool> ExistsAsync(Guid articleId)
+    {
+        return context.Articles.AnyAsync(article => article.Id == articleId);
     }
 }

@@ -13,4 +13,5 @@ public interface IArticleRepository
     void Delete(Article article);
     Task<bool> HasArticlesInCategoryAsync(Guid categoryId);
     Task<List<string>> GetExistingSlugsAsync(string baseSlug);
+    Task<bool> ExistsAsync(Guid articleId);
 }

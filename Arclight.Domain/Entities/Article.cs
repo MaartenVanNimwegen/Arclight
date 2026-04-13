@@ -19,6 +19,9 @@ namespace Arclight.Domain.Entities
         public User? Author { get; private set; }
         public Category? Category { get; private set; }
 
+        public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
+        private readonly List<Comment> _comments = new();
+
         /// <summary>
         /// Default constructor for creating a new Article
         /// </summary>

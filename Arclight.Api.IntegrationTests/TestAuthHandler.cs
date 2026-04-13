@@ -19,6 +19,11 @@ public class TestAuthHandler : AuthenticationHandler<AuthenticationSchemeOptions
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()
     {
+        if (Request.Headers.ContainsKey("X-Skip-Test-Auth"))
+        {
+            return Task.FromResult(AuthenticateResult.NoResult());
+        }
+
         var roles = Request.Headers.TryGetValue(RolesHeader, out var headerValues)
             ? headerValues.ToString().Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             : new[] { "ContentCreator" };

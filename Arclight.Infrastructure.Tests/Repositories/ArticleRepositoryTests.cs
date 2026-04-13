@@ -118,4 +118,105 @@ public class ArticleRepositoryTests
         // Assert
         context.Articles.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task GetByIdAsync_ShouldReturnArticle_WithIncludes()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+        var author = new User("t@t.nl", "J", "D", "h", UserRole.ContentCreator);
+        var category = new Category("C", "c", "d");
+        var article = new Article("T", "s", "s", "c", author.Id, category.Id);
+
+        context.Users.Add(author);
+        context.Categories.Add(category);
+        context.Articles.Add(article);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.GetByIdAsync(article.Id);
+
+        // Assert
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(article.Id);
+        result.Author.Should().NotBeNull();
+        result.Category.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task AddAsync_ShouldAddArticleToContext()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+        var article = new Article("New", "new", "s", "c", Guid.NewGuid(), Guid.NewGuid());
+
+        // Act
+        await repo.AddAsync(article);
+        await repo.SaveChangesAsync();
+
+        // Assert
+        context.Articles.Any(a => a.Slug == "new").Should().BeTrue();
+    }
+
+    [Fact]
+    public async Task HasArticlesInCategoryAsync_ShouldReturnCorrectResult()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+        var categoryId = Guid.NewGuid();
+        var article = new Article("T", "s", "s", "c", Guid.NewGuid(), categoryId);
+
+        context.Articles.Add(article);
+        await context.SaveChangesAsync();
+
+        // Act & Assert
+        (await repo.HasArticlesInCategoryAsync(categoryId)).Should().BeTrue();
+        (await repo.HasArticlesInCategoryAsync(Guid.NewGuid())).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task ExistsAsync_ShouldReturnTrue_WhenArticleExists()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+        var articleId = Guid.NewGuid();
+        var article = new Article("T", "s", "s", "c", Guid.NewGuid(), Guid.NewGuid());
+        typeof(Article).GetProperty("Id")?.SetValue(article, articleId);
+
+        context.Articles.Add(article);
+        await context.SaveChangesAsync();
+
+        // Act & Assert
+        (await repo.ExistsAsync(articleId)).Should().BeTrue();
+        (await repo.ExistsAsync(Guid.NewGuid())).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task GetExistingSlugsAsync_ShouldReturnMatchingSlugs()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+        var baseSlug = "test-article";
+
+        context.Articles.AddRange(
+            new Article("T1", baseSlug, "s", "c", Guid.NewGuid(), Guid.NewGuid()),
+            new Article("T2", baseSlug + "-1", "s", "c", Guid.NewGuid(), Guid.NewGuid()),
+            new Article("T3", baseSlug + "-v2", "s", "c", Guid.NewGuid(), Guid.NewGuid()),
+            new Article("T4", "other-article", "s", "c", Guid.NewGuid(), Guid.NewGuid())
+        );
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.GetExistingSlugsAsync(baseSlug);
+
+        // Assert
+        result.Should().HaveCount(3);
+        result.Should().Contain(new[] { baseSlug, baseSlug + "-1", baseSlug + "-v2" });
+        result.Should().NotContain("other-article");
+    }
 }
