@@ -69,8 +69,8 @@ public class CommentRepositoryTests
         var oldDate = DateTimeOffset.UtcNow.AddHours(-1);
         var newDate = DateTimeOffset.UtcNow;
 
-        typeof(Comment).GetProperty("CreatedAt")?.SetValue(oldComment, (DateTimeOffset?)oldDate);
-        typeof(Comment).GetProperty("CreatedAt")?.SetValue(newComment, (DateTimeOffset?)newDate);
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(oldComment, oldDate);
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(newComment, newDate);
 
         await context.SaveChangesAsync();
         context.ChangeTracker.Clear();
