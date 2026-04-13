@@ -54,7 +54,16 @@ public static class CommentEndpoints
     ICommentService service,
     ClaimsPrincipal user)
     {
-        var userId = user.GetUserId();
+        Guid userId;
+        try
+        {
+            userId = user.GetUserId();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Unauthorized();
+        }
+
         try
         {
             var response = await service.AddCommentAsync(articleId, userId, request);
