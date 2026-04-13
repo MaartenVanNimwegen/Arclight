@@ -60,7 +60,7 @@ public class CommentEndpointsTests(CustomWebApplicationFactory factory) : BaseIn
     }
 
     [Fact]
-    public async Task DeleteComment_ShouldReturnNoContent_WhenUserIsOwner()
+    public async Task DeleteComment_ShouldReturnOk_WhenUserIsOwner()
     {
         // Arrange
         var articleId = await SeedArticleAsync();
