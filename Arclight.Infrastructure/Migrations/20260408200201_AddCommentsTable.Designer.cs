@@ -117,9 +117,6 @@ namespace Arclight.Infrastructure.Migrations
                     b.Property<Guid>("ArticleId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ArticleId1")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -133,18 +130,11 @@ namespace Arclight.Infrastructure.Migrations
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("UserId1")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("ArticleId");
 
-                    b.HasIndex("ArticleId1");
-
                     b.HasIndex("UserId");
-
-                    b.HasIndex("UserId1");
 
                     b.ToTable("Comments");
                 });
@@ -216,24 +206,16 @@ namespace Arclight.Infrastructure.Migrations
             modelBuilder.Entity("Arclight.Domain.Entities.Comment", b =>
                 {
                     b.HasOne("Arclight.Domain.Entities.Article", "Article")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Arclight.Domain.Entities.Article", null)
-                        .WithMany("Comments")
-                        .HasForeignKey("ArticleId1");
-
                     b.HasOne("Arclight.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("Comments")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("Arclight.Domain.Entities.User", null)
-                        .WithMany("Comments")
-                        .HasForeignKey("UserId1");
 
                     b.Navigation("Article");
 
