@@ -60,5 +60,9 @@ public static class CommentEndpoints
         {
             return Results.BadRequest(new { message = ex.Message });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
     }
 }
