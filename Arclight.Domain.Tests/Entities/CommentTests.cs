@@ -21,7 +21,7 @@ public class CommentTests
         comment.ArticleId.Should().Be(articleId);
         comment.UserId.Should().Be(userId);
         comment.Id.Should().NotBeEmpty();
-        comment.CreatedAt.Should().BeBefore(DateTime.UtcNow.AddSeconds(1));
+        comment.CreatedAt.Should().BeBefore(DateTimeOffset.UtcNow.AddSeconds(1));
     }
 
     [Theory]
@@ -66,7 +66,7 @@ public class CommentTests
         // Arrange
         var comment = new Comment("Oude tekst", Guid.NewGuid(), Guid.NewGuid());
 
-        var voorUpdate = DateTime.UtcNow;
+        var voorUpdate = DateTimeOffset.UtcNow;
         var nieuweTekst = "Nieuwe, verbeterde tekst";
 
         // Act
@@ -77,7 +77,7 @@ public class CommentTests
 
         comment.UpdatedAt.Should().NotBeNull();
         comment.UpdatedAt.Value.Should().BeOnOrAfter(voorUpdate);
-        comment.UpdatedAt.Value.Should().BeBefore(DateTime.UtcNow.AddSeconds(1));
+        comment.UpdatedAt.Value.Should().BeBefore(DateTimeOffset.UtcNow.AddSeconds(1));
     }
 
     [Theory]

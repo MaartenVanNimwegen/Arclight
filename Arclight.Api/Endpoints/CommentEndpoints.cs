@@ -34,9 +34,17 @@ public static class CommentEndpoints
     ICommentService service,
     ClaimsPrincipal user)
     {
-        var userId = user.GetUserId();
-        var role = user.GetUserRole();
+        Guid userId;
+        try
+        {
+            userId = user.GetUserId();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Unauthorized();
+        }
 
+        var role = user.GetUserRole();
         try
         {
             var success = await service.DeleteCommentAsync(articleId, commentId, userId, role);
