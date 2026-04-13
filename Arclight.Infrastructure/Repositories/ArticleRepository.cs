@@ -30,7 +30,6 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     public async Task<Article?> GetByIdAsync(Guid id)
     {
         return await context.Articles
-            .AsNoTracking()
             .Include(a => a.Author)
             .Include(a => a.Category)
             .FirstOrDefaultAsync(a => a.Id == id);
