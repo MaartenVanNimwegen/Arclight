@@ -61,7 +61,7 @@ public class CommentTests
     }
 
     [Fact]
-    public async Task UpdateText_ShouldUpdateTextAndSetUpdatedDate_WhenValidText()
+    public void UpdateText_ShouldUpdateTextAndSetUpdatedDate_WhenValidText()
     {
         // Arrange
         var comment = new Comment("Oude tekst", Guid.NewGuid(), Guid.NewGuid());
