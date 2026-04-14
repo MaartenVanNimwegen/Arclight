@@ -11,9 +11,29 @@ namespace Arclight.Api
 {
     public partial class Program
     {
+        private const string ArclightFrontendCorsPolicy = "ArclightFrontend";
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            var corsAllowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (corsAllowedOrigins is null || corsAllowedOrigins.Length == 0)
+            {
+                throw new InvalidOperationException("CORS configuration error: 'Cors:AllowedOrigins' is missing or empty.");
+            }
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(ArclightFrontendCorsPolicy, policy =>
+                {
+                    policy.WithOrigins(corsAllowedOrigins)
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
 
             var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
             var jwtAudience = builder.Configuration["JwtSettings:Audience"];
@@ -107,7 +127,7 @@ namespace Arclight.Api
             }
 
             // Configure Middleware
-
+            app.UseCors(ArclightFrontendCorsPolicy);
             app.UseExceptionHandler();
             app.UseHttpsRedirection();
 
