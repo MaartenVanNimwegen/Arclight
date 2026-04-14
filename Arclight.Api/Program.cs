@@ -15,11 +15,19 @@ namespace Arclight.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            var corsAllowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+            if (corsAllowedOrigins is null || corsAllowedOrigins.Length == 0)
+            {
+                throw new InvalidOperationException("CORS configuration error: 'Cors:AllowedOrigins' is missing or empty.");
+            }
+
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("ArclightFrontend", policy =>
                 {
-                    policy.WithOrigins("http://localhost:5173")
+                    policy.WithOrigins(corsAllowedOrigins)
                           .AllowAnyHeader()
                           .AllowAnyMethod();
                 });
