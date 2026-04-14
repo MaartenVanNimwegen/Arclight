@@ -26,12 +26,20 @@ public static class ArticleEndpoints
             .RequireAuthorization("RequireContentManager")
             .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>();
         group.MapDelete("/{id:guid}", DeleteArticle).RequireAuthorization("RequireContentManager");
+        group.MapGet("/drafts", GetAllUnpublishedArticles).RequireAuthorization("RequireContentManager");
     }
 
     static async Task<IResult> GetAllArticles(IArticleService service)
     {
         // Returns all the published articles
         IEnumerable<ArticleResponse> articles = await service.GetAllPublishedArticlesAsync();
+        return Results.Ok(articles);
+    }
+
+    static async Task<IResult> GetAllUnpublishedArticles(IArticleService service, ClaimsPrincipal user)
+    {
+        // Returns all unpublished articles of the user
+        IEnumerable<ArticleResponse> articles = await service.GetAllUnpublishedArticlesAsync(user);
         return Results.Ok(articles);
     }
 

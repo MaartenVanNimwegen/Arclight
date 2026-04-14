@@ -2,6 +2,7 @@
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
+using System.Security.Claims;
 
 namespace Arclight.Application.Services;
 
@@ -100,5 +101,21 @@ public class ArticleService(IArticleRepository articleRepository, IUserRepositor
         articleRepository.Delete(article);
         await articleRepository.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<IEnumerable<ArticleResponse>> GetAllUnpublishedArticlesAsync(ClaimsPrincipal user)
+    {
+        IEnumerable<Article> articles = await articleRepository.GetAllUnpublishedAsync();
+
+        return articles.Select(a => new ArticleResponse(
+            a.Id,
+            a.Title,
+            a.Slug,
+            a.Summary,
+            a.Content,
+            a.PublishedAt,
+            a.Author?.FullName ?? "Unknown author",
+            a.Category?.Name ?? "No category"
+        ));
     }
 }

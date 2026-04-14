@@ -72,4 +72,15 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
     {
         return context.Articles.AnyAsync(article => article.Id == articleId);
     }
+
+    public async Task<IEnumerable<Article>> GetAllUnpublishedAsync()
+    {
+        return await context.Articles
+            .AsNoTracking()
+            .Include(a => a.Author)
+            .Include(a => a.Category)
+            .Where(a => a.IsPublished == false)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+    }
 }
