@@ -25,6 +25,7 @@ public static class ArticleEndpoints
         group.MapPut("/{id:guid}", UpdateArticle)
             .RequireAuthorization("RequireContentManager")
             .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>();
+        group.MapPatch("/{id:guid}/publish", PublishArticle).RequireAuthorization("RequireContentManager");
         group.MapDelete("/{id:guid}", DeleteArticle).RequireAuthorization("RequireContentManager");
         group.MapGet("/drafts", GetAllUnpublishedArticles).RequireAuthorization("RequireContentManager");
     }
@@ -79,6 +80,14 @@ public static class ArticleEndpoints
     {
         var success = await service.UpdateArticleAsync(id, request);
 
+        return success
+            ? Results.NoContent()
+            : Results.NotFound(new { message = "Article not found." });
+    }
+
+    static async Task<IResult> PublishArticle(Guid id, IArticleService service)
+    {
+        bool success = await service.PublishArticleAsync(id);
         return success
             ? Results.NoContent()
             : Results.NotFound(new { message = "Article not found." });

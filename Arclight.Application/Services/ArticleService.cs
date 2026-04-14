@@ -74,6 +74,20 @@ public class ArticleService(IArticleRepository articleRepository, IUserRepositor
         return article.Id;
     }
 
+    public async Task<bool> PublishArticleAsync(Guid id)
+    {
+        Article? article = await articleRepository.GetByIdAsync(id);
+
+        if (article is null)
+        {
+            return false;
+        }
+
+        article.Publish();
+        await articleRepository.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> UpdateArticleAsync(Guid id, UpdateArticleRequest request)
     {
         var article = await articleRepository.GetByIdAsync(id);
