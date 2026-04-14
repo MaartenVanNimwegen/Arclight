@@ -11,6 +11,8 @@ namespace Arclight.Api
 {
     public partial class Program
     {
+        private const string ArclightFrontendCorsPolicy = "ArclightFrontend";
+
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +27,7 @@ namespace Arclight.Api
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("ArclightFrontend", policy =>
+                options.AddPolicy(ArclightFrontendCorsPolicy, policy =>
                 {
                     policy.WithOrigins(corsAllowedOrigins)
                           .AllowAnyHeader()
@@ -125,7 +127,7 @@ namespace Arclight.Api
             }
 
             // Configure Middleware
-            app.UseCors("ArclightFrontend");
+            app.UseCors(ArclightFrontendCorsPolicy);
             app.UseExceptionHandler();
             app.UseHttpsRedirection();
 
