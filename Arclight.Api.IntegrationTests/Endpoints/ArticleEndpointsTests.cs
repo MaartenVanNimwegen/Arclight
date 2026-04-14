@@ -117,6 +117,48 @@ public class ArticleEndpointsTests : BaseIntegrationTest
     }
 
     [Fact]
+    public async Task PublishArticle_ShouldReturnNotFound_WhenArticleDoesNotExist()
+    {
+        // Arrange
+        var randomId = Guid.NewGuid();
+
+        // Act
+        var response = await Client.PatchAsync($"/articles/{randomId}/publish", null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task PublishArticle_ShouldReturnNoContent_AndMakeArticlePublic_WhenDraftExists()
+    {
+        // Arrange
+        var category = new Category("Draft", "draft", "desc");
+        var author = new User("draft@test.nl", "Draft", "Author", "h", UserRole.ContentCreator);
+        var article = new Article("Draft Title", "draft-title", "Sum", "Content", author.Id, category.Id);
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            context.Users.Add(author);
+            context.Categories.Add(category);
+            context.Articles.Add(article);
+            await context.SaveChangesAsync();
+        });
+
+        var beforePublish = await Client.GetAsync($"/articles/{article.Slug}");
+        beforePublish.StatusCode.Should().Be(HttpStatusCode.NotFound);
+
+        // Act
+        var publishResponse = await Client.PatchAsync($"/articles/{article.Id}/publish", null);
+
+        // Assert
+        publishResponse.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        var afterPublish = await Client.GetAsync($"/articles/{article.Slug}");
+        afterPublish.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
     public async Task DeleteArticle_ShouldReturnNotFound_WhenArticleDoesNotExist()
     {
         // Arrange
