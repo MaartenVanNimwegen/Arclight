@@ -15,6 +15,16 @@ namespace Arclight.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("ArclightFrontend", policy =>
+                {
+                    policy.WithOrigins("http://localhost:5173")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             var jwtIssuer = builder.Configuration["JwtSettings:Issuer"];
             var jwtAudience = builder.Configuration["JwtSettings:Audience"];
             var jwtSecret = builder.Configuration["JwtSettings:Secret"];
@@ -107,7 +117,7 @@ namespace Arclight.Api
             }
 
             // Configure Middleware
-
+            app.UseCors("ArclightFrontend");
             app.UseExceptionHandler();
             app.UseHttpsRedirection();
 
