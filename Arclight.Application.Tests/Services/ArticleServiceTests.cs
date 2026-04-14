@@ -158,6 +158,36 @@ public class ArticleServiceTests
         existingArticle.Title.Should().Be("Nieuwe Titel");
     }
 
+    [Fact]
+    public async Task PublishArticleAsync_ShouldReturnFalse_WhenArticleDoesNotExist()
+    {
+        // Arrange
+        var articleId = Guid.NewGuid();
+        _articleRepoMock.Setup(repo => repo.GetByIdAsync(articleId))
+                        .ReturnsAsync((Article?)null);
+        // Act
+        var result = await _sut.PublishArticleAsync(articleId);
+        // Assert
+        result.Should().BeFalse();
+        _articleRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Never);
+    }
+    [Fact]
+    public async Task PublishArticleAsync_ShouldPublishAndSave_WhenArticleExists()
+    {
+        // Arrange
+        var articleId = Guid.NewGuid();
+        var existingArticle = new Article("Titel", "slug", "sum", "content", Guid.NewGuid(), Guid.NewGuid());
+        _articleRepoMock.Setup(repo => repo.GetByIdAsync(articleId))
+                        .ReturnsAsync(existingArticle);
+        // Act
+        var result = await _sut.PublishArticleAsync(articleId);
+        // Assert
+        result.Should().BeTrue();
+        existingArticle.IsPublished.Should().BeTrue();
+        existingArticle.PublishedAt.Should().NotBeNull();
+        _articleRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
     // Delete tests
 
     [Fact]
