@@ -24,7 +24,7 @@ namespace Arclight.Api.Endpoints
         static async Task<IResult> GetUser(Guid id, IUserService service)
         {
             var user = await service.GetUserAsync(id);
-            return user is not null ? Results.Ok(user) : Results.NoContent();
+            return Results.Ok(user);
         }
 
         static async Task<IResult> Login(LoginRequest request, IUserService service)
