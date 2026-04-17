@@ -1,6 +1,9 @@
-﻿using Arclight.Application.DTOs;
-using Arclight.Application.Services;
+﻿﻿using Arclight.Api.Filters;
+using Arclight.Application.DTOs;
+using Arclight.Application.Interfaces;
+using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
+using Arclight.Domain.Exceptions;
 
 namespace Arclight.Api.Endpoints
 {
@@ -10,31 +13,46 @@ namespace Arclight.Api.Endpoints
         {
             var group = app.MapGroup("/user");
 
-            group.MapPost("/register", CreateUser);
+            group.MapPost("/register", CreateUser)
+                .AddEndpointFilter<ValidationFilter<RegisterRequest>>();
+
             group.MapGet("/{id:guid}", GetUser);
-            group.MapPost("/login", Login);
+
+            group.MapPost("/login", Login)
+                .AddEndpointFilter<ValidationFilter<LoginRequest>>();
         }
 
-        static async Task<IResult> CreateUser(RegisterRequest request, UserRole role, IUserService service)
+        static async Task<IResult> CreateUser(RegisterRequest request, IUserService service)
         {
-            var id = await service.CreateUserAsync(request.email, request.firstName, request.lastName, request.password, role);
-            return Results.Created($"/user/{id}", id);
+            try
+            {
+                Guid id = await service.CreateUserAsync(request.Email, request.FirstName, request.LastName, request.Password, UserRole.User);
+                return Results.Created($"/user/{id}", id);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
         }
 
         static async Task<IResult> GetUser(Guid id, IUserService service)
         {
-            var user = await service.GetUserAsync(id);
-            return Results.Ok(user);
+            User? user = await service.GetUserAsync(id);
+            return user is not null ? Results.Ok(user) : throw new NotFoundException("User not found.");
         }
 
         static async Task<IResult> Login(LoginRequest request, IUserService service)
         {
-            var token = await service.LoginAsync(request);
+            // LoginAsync checks the credentials and returns a JWTToken if correct.
+            string? token = await service.LoginAsync(request);
 
+            // If token is null, the login was unsuccesfull
             if (token is null)
             {
                 return Results.Unauthorized();
             }
+
+            // Else the user is logged in and the token is send to the user
             return Results.Ok(new { Token = token });
         }
     }

@@ -13,7 +13,14 @@ public class User : Entity
     public UserRole Role { get; private set; }
     public UserStatus Status { get; private set; }
     public DateTimeOffset? LastLoggedinDate { get; private set; }
-    public string FullName => $"{FirstName}, {LastName}";
+    public string FullName => $"{FirstName} {LastName}";
+
+    // Navigation property: A user can have authored multiple articles
+    public IReadOnlyCollection<Article> Articles => _articles.AsReadOnly();
+    private readonly List<Article> _articles = new();
+
+    public IReadOnlyCollection<Comment> Comments => _comments.AsReadOnly();
+    private readonly List<Comment> _comments = new();
 
     /// <summary>
     /// Default constructor for creating new Users
@@ -34,13 +41,15 @@ public class User : Entity
         if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email is required");
         if (string.IsNullOrWhiteSpace(firstName)) throw new ArgumentException("First name is required");
         if (string.IsNullOrWhiteSpace(lastName)) throw new ArgumentException("Last name is required");
+        if (string.IsNullOrWhiteSpace(passwordHash)) throw new ArgumentException("Password hash is required");
+        if (!Enum.IsDefined(typeof(UserRole), role)) throw new ArgumentException("Invalid user role");
 
         Email = email;
         FirstName = firstName;
         LastName = lastName;
         PasswordHash = passwordHash;
         Role = role;
-        Status = UserStatus.Active; // Default to Active on creation
+        Status = UserStatus.Active;
     }
 
     /// <summary>
@@ -62,6 +71,9 @@ public class User : Entity
         UserRole role,
         UserStatus status) : base(id)
     {
+        if (!Enum.IsDefined(typeof(UserRole), role)) throw new ArgumentException("Invalid user role");
+        if (!Enum.IsDefined(typeof(UserStatus), status)) throw new ArgumentException("Invalid user status");
+
         Email = email;
         FirstName = firstName;
         LastName = lastName;
@@ -103,6 +115,7 @@ public class User : Entity
 
     public void ChangeRole(UserRole newRole)
     {
+        if (!Enum.IsDefined(typeof(UserRole), newRole)) throw new ArgumentException("Invalid user role");
         if (Role == newRole) return;
 
         Role = newRole;
