@@ -3,6 +3,7 @@ using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Exceptions;
 using System;
 using System.Security.Claims;
 
@@ -43,7 +44,7 @@ public static class ArticleEndpoints
 
         return article is not null
             ? Results.Ok(article)
-            : Results.NotFound(new { message = "Article not found." });
+            : throw new NotFoundException("Article not found.");
     }
 
     static async Task<IResult> CreateArticle(
@@ -74,7 +75,7 @@ public static class ArticleEndpoints
 
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { message = "Article not found." });
+            : throw new NotFoundException("Article not found.");
     }
 
     static async Task<IResult> PublishArticle(Guid id, IArticleService service)
@@ -82,7 +83,7 @@ public static class ArticleEndpoints
         bool success = await service.PublishArticleAsync(id);
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { message = "Article not found." });
+            : throw new NotFoundException("Article not found.");
     }
 
     static async Task<IResult> DeleteArticle(Guid id, IArticleService service)
@@ -91,6 +92,6 @@ public static class ArticleEndpoints
 
         return success
             ? Results.NoContent()
-            : Results.NotFound(new { message = "Article not found." });
+            : throw new NotFoundException("Article not found.");
     }
 }

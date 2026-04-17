@@ -1,6 +1,7 @@
 ﻿using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
+using Arclight.Domain.Exceptions;
 
 namespace Arclight.Api.Endpoints;
 
@@ -39,7 +40,7 @@ public static class CategoryEndpoints
         try
         {
             var success = await service.DeleteCategoryAsync(id);
-            return success ? Results.NoContent() : Results.NotFound();
+            return success ? Results.NoContent() : throw new NotFoundException("Category not found.");
         }
         catch (InvalidOperationException ex)
         {
@@ -50,6 +51,6 @@ public static class CategoryEndpoints
     static async Task<IResult> UpdateCategory(Guid id, UpdateCategoryRequest request, ICategoryService service)
     {
         var success = await service.UpdateCategoryAsync(id, request);
-        return success ? Results.NoContent() : Results.NotFound();
+        return success ? Results.NoContent() : throw new NotFoundException("Category not found.");
     }
 }

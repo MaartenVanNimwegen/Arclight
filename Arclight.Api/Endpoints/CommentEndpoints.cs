@@ -2,6 +2,7 @@
 using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
+using Arclight.Domain.Exceptions;
 using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints;
@@ -48,7 +49,7 @@ public static class CommentEndpoints
         try
         {
             var success = await service.DeleteCommentAsync(articleId, commentId, userId, role);
-            return success ? Results.Ok() : Results.NotFound();
+            return success ? Results.Ok() : throw new NotFoundException("Comment not found.");
         }
         catch (UnauthorizedAccessException)
         {

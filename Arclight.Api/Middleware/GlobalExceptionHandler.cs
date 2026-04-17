@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Diagnostics;
+﻿using Arclight.Domain.Exceptions;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Arclight.Api.Middleware;
@@ -10,19 +11,34 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         Exception exception,
         CancellationToken cancellationToken)
     {
-        logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
-
-        var problemDetails = new ProblemDetails
-        {
-            Status = StatusCodes.Status500InternalServerError,
-            Title = "Server Error",
-            Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
-            Detail = "An unexpected error occurred on our end. Please try again later."
-        };
-
         if (httpContext.Response.HasStarted)
         {
             return false;
+        }
+
+        ProblemDetails problemDetails;
+
+        if (exception is NotFoundException notFoundException)
+        {
+            problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status404NotFound,
+                Title = "Not Found",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.5.4",
+                Detail = notFoundException.Message
+            };
+        }
+        else
+        {
+            logger.LogError(exception, "An unhandled exception occurred: {Message}", exception.Message);
+
+            problemDetails = new ProblemDetails
+            {
+                Status = StatusCodes.Status500InternalServerError,
+                Title = "Server Error",
+                Type = "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
+                Detail = "An unexpected error occurred on our end. Please try again later."
+            };
         }
 
         httpContext.Response.StatusCode = problemDetails.Status.Value;
