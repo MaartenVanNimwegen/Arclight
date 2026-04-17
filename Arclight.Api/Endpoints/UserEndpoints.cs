@@ -18,13 +18,13 @@ namespace Arclight.Api.Endpoints
         static async Task<IResult> CreateUser(RegisterRequest request, UserRole role, IUserService service)
         {
             var id = await service.CreateUserAsync(request.email, request.firstName, request.lastName, request.password, role);
-            return Results.Created($"/users/{id}", id);
+            return Results.Created($"/user/{id}", id);
         }
 
         static async Task<IResult> GetUser(Guid id, IUserService service)
         {
             var user = await service.GetUserAsync(id);
-            return user is not null ? Results.Ok(user) : Results.NotFound();
+            return user is not null ? Results.Ok(user) : Results.NoContent();
         }
 
         static async Task<IResult> Login(LoginRequest request, IUserService service)
