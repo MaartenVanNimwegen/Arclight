@@ -121,6 +121,17 @@ public class ArticleService(IArticleRepository articleRepository, IUserRepositor
     {
         IEnumerable<Article> articles = await articleRepository.GetAllUnpublishedAsync();
 
+        if (!user.IsInRole(UserRole.Admin.ToString()))
+        {
+            string? userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (!Guid.TryParse(userIdClaim, out Guid authorId))
+            {
+                return Enumerable.Empty<ArticleResponse>();
+            }
+
+            articles = articles.Where(a => a.AuthorId == authorId);
+        }
         return articles.Select(a => new ArticleResponse(
             a.Id,
             a.Title,
