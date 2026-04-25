@@ -2,7 +2,6 @@
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
-using System.Security.Claims;
 
 namespace Arclight.Application.Services;
 
@@ -117,21 +116,10 @@ public class ArticleService(IArticleRepository articleRepository, IUserRepositor
         return true;
     }
 
-    public async Task<IEnumerable<ArticleResponse>> GetAllUnpublishedArticlesAsync(ClaimsPrincipal user)
+    public async Task<IEnumerable<ArticleResponse>> GetAllUnpublishedArticlesAsync(Guid authorId, bool isAdmin = false)
     {
-        IEnumerable<Article> articles = await articleRepository.GetAllUnpublishedAsync();
+        IEnumerable<Article> articles = await articleRepository.GetAllUnpublishedAsync(authorId, isAdmin);
 
-        if (!user.IsInRole(UserRole.Admin.ToString()))
-        {
-            string? userIdClaim = user.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (!Guid.TryParse(userIdClaim, out Guid authorId))
-            {
-                return Enumerable.Empty<ArticleResponse>();
-            }
-
-            articles = articles.Where(a => a.AuthorId == authorId);
-        }
         return articles.Select(a => new ArticleResponse(
             a.Id,
             a.Title,

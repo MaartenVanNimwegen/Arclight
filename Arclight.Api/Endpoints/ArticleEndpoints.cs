@@ -3,6 +3,7 @@ using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 using System;
 using System.Security.Claims;
 
@@ -39,9 +40,10 @@ public static class ArticleEndpoints
 
     static async Task<IResult> GetAllUnpublishedArticles(IArticleService service, ClaimsPrincipal user)
     {
-        // Returns all unpublished articles of the user
+        // Returns all unpublished articles of the user (or all drafts for admins)
         var authorId = user.GetUserId();
-        IEnumerable<ArticleResponse> articles = await service.GetAllUnpublishedArticlesAsync(authorId);
+        bool isAdmin = user.GetUserRole() == UserRole.Admin;
+        IEnumerable<ArticleResponse> articles = await service.GetAllUnpublishedArticlesAsync(authorId, isAdmin);
         return Results.Ok(articles);
     }
 
