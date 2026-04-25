@@ -73,13 +73,20 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
         return context.Articles.AnyAsync(article => article.Id == articleId);
     }
 
-    public async Task<IEnumerable<Article>> GetAllUnpublishedAsync()
+    public async Task<IEnumerable<Article>> GetAllUnpublishedAsync(Guid authorId, bool includeAllAuthors = false)
     {
-        return await context.Articles
+        var query = context.Articles
             .AsNoTracking()
             .Include(a => a.Author)
             .Include(a => a.Category)
-            .Where(a => a.IsPublished == false)
+            .Where(a => a.IsPublished == false);
+
+        if (!includeAllAuthors)
+        {
+            query = query.Where(a => a.AuthorId == authorId);
+        }
+
+        return await query
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
     }

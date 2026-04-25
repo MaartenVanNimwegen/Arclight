@@ -40,7 +40,8 @@ public static class ArticleEndpoints
     static async Task<IResult> GetAllUnpublishedArticles(IArticleService service, ClaimsPrincipal user)
     {
         // Returns all unpublished articles of the user
-        IEnumerable<ArticleResponse> articles = await service.GetAllUnpublishedArticlesAsync(user);
+        var authorId = user.GetUserId();
+        IEnumerable<ArticleResponse> articles = await service.GetAllUnpublishedArticlesAsync(authorId);
         return Results.Ok(articles);
     }
 
