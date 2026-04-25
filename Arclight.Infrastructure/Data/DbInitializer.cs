@@ -11,41 +11,54 @@ namespace Arclight.Infrastructure.Data
         {
             context.Database.Migrate();
 
-            // 1. Seed Users
-            if (!context.Users.Any())
+            var seedUsers = new List<(string Email, string FirstName, string LastName, string Password, UserRole Role)>
             {
-                var users = new[]
-                {
-                    new User(Guid.NewGuid(), "peter.gerardus@gmail.com", "Peter", "Gerardus", BCrypt.Net.BCrypt.HashPassword("PeterGerardus123!"), UserRole.Admin, UserStatus.Active),
-                    new User(Guid.NewGuid(), "monique.degraaf@gmail.com", "Monique", "de Graaf", BCrypt.Net.BCrypt.HashPassword("MoniqueDeGraaf123!"), UserRole.ContentCreator, UserStatus.Active),
-                    new User(Guid.NewGuid(), "dieter.gieter@gmail.com", "Dieter", "Gieter", BCrypt.Net.BCrypt.HashPassword("DieterGieter123!"), UserRole.User, UserStatus.Active)
-                };
-                context.Users.AddRange(users);
-                context.SaveChanges();
-            }
+                ("peter.gerardus@gmail.com", "Peter", "Gerardus", "PeterGerardus123!", UserRole.Admin),
+                ("monique.degraaf@gmail.com", "Monique", "de Graaf", "MoniqueDeGraaf123!", UserRole.ContentCreator),
+                ("dieter.gieter@gmail.com", "Dieter", "Gieter", "DieterGieter123!", UserRole.User)
+            };
 
-            // 2. Seed 5 Categories
-            if (!context.Categories.Any())
+            foreach (var u in seedUsers)
             {
-                var categories = new[]
+                if (!context.Users.Any(user => user.Email == u.Email))
                 {
-                    new Category("Artificial Intelligence", "ai", "Ontwikkelingen in machine learning en neurale netwerken."),
-                    new Category("Web Development", "web-dev", "De nieuwste frameworks en frontend technieken."),
-                    // Gebruik deze namen om de blogs te linken
-                    new Category("Lifestyle & Productiviteit", "lifestyle", "Tips voor een gebalanceerd en efficiënt leven."),
-                    new Category("Cybersecurity", "security", "Bescherming in de digitale wereld."),
-                    new Category("Duurzame Tech", "duurzaamheid", "Groene energie en milieuvriendelijke innovaties.")
-                };
-                context.Categories.AddRange(categories);
-                context.SaveChanges();
+                    context.Users.Add(new User(
+                        Guid.NewGuid(),
+                        u.Email,
+                        u.FirstName,
+                        u.LastName,
+                        BCrypt.Net.BCrypt.HashPassword(u.Password),
+                        u.Role,
+                        UserStatus.Active));
+                }
             }
+            context.SaveChanges();
 
-            // 3. Seed 20 Articles
+            var seedCategories = new List<(string Name, string Slug, string Description)>
+            {
+                ("Artificial Intelligence", "ai", "Ontwikkelingen in machine learning en neurale netwerken."),
+                ("Web Development", "web-dev", "De nieuwste frameworks en frontend technieken."),
+                ("Lifestyle & Productiviteit", "lifestyle", "Tips voor een gebalanceerd en efficiënt leven."),
+                ("Cybersecurity", "security", "Bescherming in de digitale wereld."),
+                ("Duurzame Tech", "duurzaamheid", "Groene energie en milieuvriendelijke innovaties.")
+            };
+
+            foreach (var c in seedCategories)
+            {
+                if (!context.Categories.Any(cat => cat.Slug == c.Slug))
+                {
+                    context.Categories.Add(new Category(c.Name, c.Slug, c.Description));
+                }
+            }
+            context.SaveChanges();
+
             if (!context.Articles.Any())
             {
-                var admin = context.Users.First(u => u.Email == "peter.gerardus@gmail.com");
-                var creator = context.Users.First(u => u.Email == "monique.degraaf@gmail.com");
+                var admin = context.Users.FirstOrDefault(u => u.Email == "peter.gerardus@gmail.com");
+                var creator = context.Users.FirstOrDefault(u => u.Email == "monique.degraaf@gmail.com");
                 var categories = context.Categories.ToList();
+
+                if (admin == null || creator == null) return;
 
                 var blogData = new List<(string Title, string Slug, string Summary, string Content, string CatSlug, Guid AuthorId)>
                 {
@@ -82,14 +95,14 @@ namespace Arclight.Infrastructure.Data
 
                 foreach (var data in blogData)
                 {
-                    var catId = categories.First(c => c.Slug == data.CatSlug).Id;
-                    var article = new Article(data.Title, data.Slug, data.Summary, data.Content, data.AuthorId, catId);
-
-                    // Direct publiceren
-                    article.Publish();
-                    context.Articles.Add(article);
+                    var category = categories.FirstOrDefault(c => c.Slug == data.CatSlug);
+                    if (category != null)
+                    {
+                        var article = new Article(data.Title, data.Slug, data.Summary, data.Content, data.AuthorId, category.Id);
+                        article.Publish();
+                        context.Articles.Add(article);
+                    }
                 }
-
                 context.SaveChanges();
             }
         }
