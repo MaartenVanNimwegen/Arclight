@@ -15,6 +15,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 {
     private readonly string _databaseName = $"IntegrationTestsDb-{Guid.NewGuid()}";
 
+    public CustomWebApplicationFactory()
+    {
+        // Provide the required configuration values before Program.Main is executed,
+        // since WebApplication.CreateBuilder reads these from env vars before Build() is called.
+        Environment.SetEnvironmentVariable("Cors__AllowedOrigins", "http://localhost:3000");
+        Environment.SetEnvironmentVariable("JwtSettings__Issuer", "test-issuer");
+        Environment.SetEnvironmentVariable("JwtSettings__Audience", "test-audience");
+        Environment.SetEnvironmentVariable("JwtSettings__Secret", "test-secret-key-for-integration-tests-only");
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");

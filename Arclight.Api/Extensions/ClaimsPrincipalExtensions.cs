@@ -19,7 +19,7 @@ public static class ClaimsPrincipalExtensions
 
     public static UserRole GetUserRole(this ClaimsPrincipal user)
     {
-        var roleClaim = user.FindFirstValue(ClaimTypes.Role);
+        var roleClaim = user.FindFirstValue("role");
 
         if (Enum.TryParse<UserRole>(roleClaim, true, out var role))
         {

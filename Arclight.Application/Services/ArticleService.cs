@@ -115,4 +115,20 @@ public class ArticleService(IArticleRepository articleRepository, IUserRepositor
         await articleRepository.SaveChangesAsync();
         return true;
     }
+
+    public async Task<IEnumerable<ArticleResponse>> GetAllUnpublishedArticlesAsync(Guid authorId, bool isAdmin = false)
+    {
+        IEnumerable<Article> articles = await articleRepository.GetAllUnpublishedAsync(authorId, isAdmin);
+
+        return articles.Select(a => new ArticleResponse(
+            a.Id,
+            a.Title,
+            a.Slug,
+            a.Summary,
+            a.Content,
+            a.PublishedAt,
+            a.Author?.FullName ?? "Unknown author",
+            a.Category?.Name ?? "No category"
+        ));
+    }
 }

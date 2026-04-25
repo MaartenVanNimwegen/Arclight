@@ -5,6 +5,7 @@ namespace Arclight.Application.Interfaces;
 public interface IArticleRepository
 {
     Task<IEnumerable<Article>> GetAllPublishedAsync();
+    Task<IEnumerable<Article>> GetAllUnpublishedAsync(Guid authorId, bool isAdmin = false);
     Task<Article?> GetBySlugAsync(string slug);
     Task<Article?> GetByIdAsync(Guid id);
     Task AddAsync(Article article);

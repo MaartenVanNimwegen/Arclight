@@ -3,6 +3,7 @@ using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 using System;
 using System.Security.Claims;
 
@@ -27,12 +28,22 @@ public static class ArticleEndpoints
             .AddEndpointFilter<ValidationFilter<UpdateArticleRequest>>();
         group.MapPatch("/{id:guid}/publish", PublishArticle).RequireAuthorization("RequireContentManager");
         group.MapDelete("/{id:guid}", DeleteArticle).RequireAuthorization("RequireContentManager");
+        group.MapGet("/drafts", GetAllUnpublishedArticles).RequireAuthorization("RequireContentManager");
     }
 
     static async Task<IResult> GetAllArticles(IArticleService service)
     {
         // Returns all the published articles
         IEnumerable<ArticleResponse> articles = await service.GetAllPublishedArticlesAsync();
+        return Results.Ok(articles);
+    }
+
+    static async Task<IResult> GetAllUnpublishedArticles(IArticleService service, ClaimsPrincipal user)
+    {
+        // Returns all unpublished articles of the user (or all drafts for admins)
+        var authorId = user.GetUserId();
+        bool isAdmin = user.GetUserRole() == UserRole.Admin;
+        IEnumerable<ArticleResponse> articles = await service.GetAllUnpublishedArticlesAsync(authorId, isAdmin);
         return Results.Ok(articles);
     }
 
