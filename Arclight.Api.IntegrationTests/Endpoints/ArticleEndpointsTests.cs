@@ -261,4 +261,149 @@ public class ArticleEndpointsTests : BaseIntegrationTest
         var afterPublish = await Client.GetAsync($"/articles/{article.Slug}");
         afterPublish.StatusCode.Should().Be(HttpStatusCode.OK);
     }
+
+    [Fact]
+    public async Task GetDrafts_ShouldReturnUnauthorized_WhenNotAuthenticated()
+    {
+        // Arrange
+        var anonymousClient = CreateAnonymousClient();
+
+        // Act
+        var response = await anonymousClient.GetAsync("/articles/drafts");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task GetDrafts_ShouldReturnOk_WithOwnDrafts_WhenContentCreator()
+    {
+        // Arrange
+        var testUserId = Guid.Parse(TestAuthHandler.TestUserId);
+        var category = new Category("CC Drafts Cat", "cc-drafts-cat", "desc");
+        var author = new User(testUserId, "cc-drafts@test.nl", "CC", "Drafts", "h", UserRole.ContentCreator, UserStatus.Active);
+        var ownDraft = new Article("CC Own Draft", "cc-own-draft", "sum", "content", testUserId, category.Id);
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            context.Categories.Add(category);
+            if (await context.Users.FindAsync(testUserId) == null)
+                context.Users.Add(author);
+            context.Articles.Add(ownDraft);
+            await context.SaveChangesAsync();
+        });
+
+        // Act
+        var response = await Client.GetAsync("/articles/drafts");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var articles = await response.Content.ReadFromJsonAsync<IEnumerable<ArticleResponse>>();
+        articles.Should().Contain(a => a.Title == "CC Own Draft");
+    }
+
+    [Fact]
+    public async Task GetDrafts_ShouldNotIncludeOtherUsersDrafts_WhenContentCreator()
+    {
+        // Arrange
+        var testUserId = Guid.Parse(TestAuthHandler.TestUserId);
+        var otherUserId = Guid.NewGuid();
+        var category = new Category("Filter Drafts Cat", "filter-drafts-cat", "desc");
+        var otherAuthor = new User(otherUserId, "other-drafts@test.nl", "Other", "Author", "h", UserRole.ContentCreator, UserStatus.Active);
+        var ownDraft = new Article("Filter Own Draft", "filter-own-draft", "sum", "content", testUserId, category.Id);
+        var otherDraft = new Article("Filter Other Draft", "filter-other-draft", "sum", "content", otherUserId, category.Id);
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            context.Categories.Add(category);
+            if (await context.Users.FindAsync(testUserId) == null)
+            {
+                var testAuthor = new User(testUserId, "filter-cc@test.nl", "Filter", "CC", "h", UserRole.ContentCreator, UserStatus.Active);
+                context.Users.Add(testAuthor);
+            }
+            context.Users.Add(otherAuthor);
+            context.Articles.Add(ownDraft);
+            context.Articles.Add(otherDraft);
+            await context.SaveChangesAsync();
+        });
+
+        // Act
+        var response = await Client.GetAsync("/articles/drafts");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var articles = await response.Content.ReadFromJsonAsync<IEnumerable<ArticleResponse>>();
+        articles.Should().Contain(a => a.Title == "Filter Own Draft");
+        articles.Should().NotContain(a => a.Title == "Filter Other Draft");
+    }
+
+    [Fact]
+    public async Task GetDrafts_ShouldReturnAllDrafts_WhenAdmin()
+    {
+        // Arrange
+        var testUserId = Guid.Parse(TestAuthHandler.TestUserId);
+        var otherUserId = Guid.NewGuid();
+        var category = new Category("Admin Drafts Cat", "admin-drafts-cat", "desc");
+        var otherAuthor = new User(otherUserId, "admin-other@test.nl", "Other", "Admin", "h", UserRole.ContentCreator, UserStatus.Active);
+        var testUserDraft = new Article("Admin Draft Own", "admin-draft-own", "sum", "content", testUserId, category.Id);
+        var otherUserDraft = new Article("Admin Draft Other", "admin-draft-other", "sum", "content", otherUserId, category.Id);
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            context.Categories.Add(category);
+            if (await context.Users.FindAsync(testUserId) == null)
+            {
+                var testAuthor = new User(testUserId, "admin-test@test.nl", "Admin", "Test", "h", UserRole.Admin, UserStatus.Active);
+                context.Users.Add(testAuthor);
+            }
+            context.Users.Add(otherAuthor);
+            context.Articles.Add(testUserDraft);
+            context.Articles.Add(otherUserDraft);
+            await context.SaveChangesAsync();
+        });
+
+        var adminClient = CreateClientWithRoles("Admin");
+
+        // Act
+        var response = await adminClient.GetAsync("/articles/drafts");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var articles = await response.Content.ReadFromJsonAsync<IEnumerable<ArticleResponse>>();
+        articles.Should().Contain(a => a.Title == "Admin Draft Own");
+        articles.Should().Contain(a => a.Title == "Admin Draft Other");
+    }
+
+    [Fact]
+    public async Task GetDrafts_ShouldNotReturnPublishedArticles()
+    {
+        // Arrange
+        var testUserId = Guid.Parse(TestAuthHandler.TestUserId);
+        var category = new Category("Published Check Cat", "published-check-cat", "desc");
+        var draft = new Article("Drafts Only Draft", "drafts-only-draft", "sum", "content", testUserId, category.Id);
+        var published = new Article("Drafts Only Published", "drafts-only-published", "sum", "content", testUserId, category.Id);
+        published.Publish();
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            context.Categories.Add(category);
+            if (await context.Users.FindAsync(testUserId) == null)
+            {
+                var testAuthor = new User(testUserId, "published-check@test.nl", "Published", "Check", "h", UserRole.ContentCreator, UserStatus.Active);
+                context.Users.Add(testAuthor);
+            }
+            context.Articles.Add(draft);
+            context.Articles.Add(published);
+            await context.SaveChangesAsync();
+        });
+
+        // Act
+        var response = await Client.GetAsync("/articles/drafts");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var articles = await response.Content.ReadFromJsonAsync<IEnumerable<ArticleResponse>>();
+        articles.Should().Contain(a => a.Title == "Drafts Only Draft");
+        articles.Should().NotContain(a => a.Title == "Drafts Only Published");
+    }
 }
