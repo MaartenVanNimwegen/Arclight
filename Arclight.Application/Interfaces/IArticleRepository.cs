@@ -15,4 +15,5 @@ public interface IArticleRepository
     Task<bool> HasArticlesInCategoryAsync(Guid categoryId);
     Task<List<string>> GetExistingSlugsAsync(string baseSlug);
     Task<bool> ExistsAsync(Guid articleId);
+    Task<IEnumerable<Article>> GetByAuthorIdAsync(Guid authorId);
 }

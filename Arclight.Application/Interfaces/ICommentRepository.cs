@@ -9,5 +9,6 @@ namespace Arclight.Application.Interfaces
         Task AddAsync(Comment comment);
         void Delete(Comment comment);
         Task SaveChangesAsync();
+        Task<IEnumerable<Comment>> GetByUserIdAsync(Guid userId);
     }
 }

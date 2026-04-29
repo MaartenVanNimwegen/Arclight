@@ -19,6 +19,15 @@ namespace Arclight.Api.Endpoints
 
             group.MapPost("/login", Login)
                 .AddEndpointFilter<ValidationFilter<LoginRequest>>();
+
+            group.MapGet("/", GetAllUsers)
+                .RequireAuthorization("RequireAdmin");
+
+            group.MapPut("/{id:guid}/{role}", UpdateUser)
+                .RequireAuthorization("RequireAdmin");
+
+            group.MapDelete("/{id:guid}", DeleteUser)
+                .RequireAuthorization("RequireAdmin");
         }
 
         static async Task<IResult> CreateUser(RegisterRequest request, IUserService service)
@@ -54,6 +63,48 @@ namespace Arclight.Api.Endpoints
 
             // Else the user is logged in and the token is send to the user
             return Results.Ok(new { Token = token });
+        }
+
+        static async Task<IResult> GetAllUsers(IUserService service)
+        {
+            IEnumerable<User> users = await service.GetAllUsersAsync();
+            return Results.Ok(users);
+        }
+
+        static async Task<IResult> UpdateUser(Guid id, string role, IUserService service)
+        {
+            try
+            {
+                UserRole userRole = Enum.Parse<UserRole>(role, true);
+                await service.UpdateUserRoleAsync(id, userRole);
+                return Results.NoContent();
+            }
+            catch (ArgumentException)
+            {
+                return Results.BadRequest(new { error = "Invalid role. Valid roles are: User, Admin." });
+            }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound(new { error = "User not found." });
+            }
+        }
+
+        static async Task<IResult> DeleteUser(Guid id, IUserService service)
+        {
+            try
+            {
+                await service.DeleteUserAsync(id);
+
+                return Results.NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound(new { error = "User not found." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
         }
     }
 }

@@ -90,4 +90,14 @@ public class ArticleRepository(AppDbContext context) : IArticleRepository
             .OrderByDescending(a => a.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Article>> GetByAuthorIdAsync(Guid authorId)
+    {
+        return await context.Articles
+            .AsNoTracking()
+            .Include(a => a.Author)
+            .Include(a => a.Category)
+            .Where(a => a.AuthorId == authorId)
+            .ToListAsync();
+    }
 }

@@ -37,4 +37,13 @@ public class CommentRepository(AppDbContext context) : ICommentRepository
     {
        await context.SaveChangesAsync();
     }
+
+    public async Task<IEnumerable<Comment>> GetByUserIdAsync(Guid userId)
+    {
+        return await context.Comments
+            .Include(c => c.User)
+            .Where(c => c.UserId == userId)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+    }
 }

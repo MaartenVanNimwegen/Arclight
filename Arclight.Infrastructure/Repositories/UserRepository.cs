@@ -1,5 +1,6 @@
 ﻿using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 using Arclight.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -17,5 +18,25 @@ namespace Arclight.Infrastructure.Repositories
         public async Task<User?> GetByIdAsync(Guid id) => await context.Users.FindAsync(id);
 
         public async Task SaveChangesAsync() => await context.SaveChangesAsync();
+
+        public async Task<IEnumerable<User>> GetAllUsersAsync() => await context.Users.ToListAsync();
+
+        public async Task UpdateUserRoleAsync(Guid id, UserRole role)
+        {
+            User? user = await context.Users.FindAsync(id);
+            if (user is null)
+            {
+                throw new KeyNotFoundException("User not found");
+            }
+                
+            user.ChangeRole(role);
+            context.Users.Update(user);
+            await context.SaveChangesAsync();
+        }
+
+        public void Delete(User user)
+        {
+            context.Users.Remove(user);
+        }
     }
 }
