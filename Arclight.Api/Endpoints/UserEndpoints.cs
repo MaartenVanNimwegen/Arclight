@@ -8,6 +8,8 @@ namespace Arclight.Api.Endpoints
 {
     public static class UserEndpoints
     {
+        private static readonly string ValidRoles = string.Join(", ", Enum.GetNames<UserRole>());
+
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/user");
@@ -19,6 +21,15 @@ namespace Arclight.Api.Endpoints
 
             group.MapPost("/login", Login)
                 .AddEndpointFilter<ValidationFilter<LoginRequest>>();
+
+            group.MapGet("/", GetAllUsers)
+                .RequireAuthorization("RequireAdmin");
+
+            group.MapPut("/{id:guid}/{role}", UpdateUser)
+                .RequireAuthorization("RequireAdmin");
+
+            group.MapDelete("/{id:guid}", DeleteUser)
+                .RequireAuthorization("RequireAdmin");
         }
 
         static async Task<IResult> CreateUser(RegisterRequest request, IUserService service)
@@ -54,6 +65,48 @@ namespace Arclight.Api.Endpoints
 
             // Else the user is logged in and the token is send to the user
             return Results.Ok(new { Token = token });
+        }
+
+        static async Task<IResult> GetAllUsers(IUserService service)
+        {
+            IEnumerable<UserResponse> users = await service.GetAllUsersAsync();
+            return Results.Ok(users);
+        }
+
+        static async Task<IResult> UpdateUser(Guid id, string role, IUserService service)
+        {
+            if (!Enum.TryParse<UserRole>(role, true, out UserRole parsedRole) || !Enum.IsDefined(parsedRole))
+            {
+                return Results.BadRequest(new { error = $"Invalid role. Valid roles are: {ValidRoles}." });
+            }
+
+            try
+            {
+                await service.UpdateUserRoleAsync(id, parsedRole);
+                return Results.NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound(new { error = "User not found." });
+            }
+        }
+
+        static async Task<IResult> DeleteUser(Guid id, IUserService service)
+        {
+            try
+            {
+                await service.DeleteUserAsync(id);
+
+                return Results.NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound(new { error = "User not found." });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.Conflict(new { error = ex.Message });
+            }
         }
     }
 }

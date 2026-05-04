@@ -219,4 +219,62 @@ public class ArticleRepositoryTests
         result.Should().Contain(new[] { baseSlug, baseSlug + "-1", baseSlug + "-v2" });
         result.Should().NotContain("other-article");
     }
+
+    [Fact]
+    public async Task GetByAuthorIdAsync_ShouldReturnArticles_FilteredByAuthor_AndIncludeNavigationProperties()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+
+        var targetAuthor = new User("target@test.nl", "Target", "Author", "hash", UserRole.ContentCreator);
+        var otherAuthor = new User("other@test.nl", "Other", "Author", "hash", UserRole.ContentCreator);
+        var category = new Category("Tech", "tech", "desc");
+
+        context.Users.AddRange(targetAuthor, otherAuthor);
+        context.Categories.Add(category);
+        await context.SaveChangesAsync();
+
+        var targetArticle1 = new Article("Target Art 1", "t1", "sum", "content", targetAuthor.Id, category.Id);
+        var targetArticle2 = new Article("Target Art 2", "t2", "sum", "content", targetAuthor.Id, category.Id);
+        var otherArticle = new Article("Other Art", "o1", "sum", "content", otherAuthor.Id, category.Id);
+
+        context.Articles.AddRange(targetArticle1, targetArticle2, otherArticle);
+        await context.SaveChangesAsync();
+
+        context.ChangeTracker.Clear();
+
+        // Act
+        var result = (await repo.GetByAuthorIdAsync(targetAuthor.Id)).ToList();
+
+        // Assert
+        result.Should().HaveCount(2, "omdat we filteren op Target Author en Other Author moeten negeren");
+
+        result.Should().ContainSingle(a => a.Title == "Target Art 1");
+        result.Should().ContainSingle(a => a.Title == "Target Art 2");
+        result.Should().NotContain(a => a.Title == "Other Art");
+
+        var firstArticle = result.First();
+        firstArticle.Author.Should().NotBeNull();
+        firstArticle.Author!.FullName.Should().Be("Target Author");
+
+        firstArticle.Category.Should().NotBeNull();
+        firstArticle.Category!.Slug.Should().Be("tech");
+    }
+
+    [Fact]
+    public async Task GetByAuthorIdAsync_ShouldReturnEmptyList_WhenAuthorHasNoArticles()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new ArticleRepository(context);
+
+        var randomAuthorId = Guid.NewGuid();
+
+        // Act
+        var result = await repo.GetByAuthorIdAsync(randomAuthorId);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
 }

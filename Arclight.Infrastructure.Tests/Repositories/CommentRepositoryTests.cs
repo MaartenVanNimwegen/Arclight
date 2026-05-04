@@ -137,4 +137,66 @@ public class CommentRepositoryTests
         var dbComment = await context.Comments.FirstAsync();
         dbComment.Text.Should().Be("Updated text");
     }
+
+    [Fact]
+    public async Task GetByUserIdAsync_ShouldReturnComments_FilteredByUser_SortedByNewestFirst_AndIncludeUser()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new CommentRepository(context);
+
+        var userA = new User("usera@test.nl", "Alice", "A", "hash", UserRole.User);
+        var userB = new User("userb@test.nl", "Bob", "B", "hash", UserRole.User);
+        var category = new Category("Test", "test", "desc");
+        var article = new Article("Titel", "slug", "sum", "content", userA.Id, category.Id);
+
+        context.Users.AddRange(userA, userB);
+        context.Categories.Add(category);
+        context.Articles.Add(article);
+        await context.SaveChangesAsync();
+
+        var oldCommentUserA = new Comment("Oud A", article.Id, userA.Id);
+        var newCommentUserA = new Comment("Nieuw A", article.Id, userA.Id);
+        var commentUserB = new Comment("Reactie B", article.Id, userB.Id);
+
+        context.Comments.AddRange(oldCommentUserA, newCommentUserA, commentUserB);
+        await context.SaveChangesAsync();
+
+        var oldDate = DateTimeOffset.UtcNow.AddHours(-1);
+        var newDate = DateTimeOffset.UtcNow;
+
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(oldCommentUserA, (DateTimeOffset?)oldDate);
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(newCommentUserA, (DateTimeOffset?)newDate);
+
+        await context.SaveChangesAsync();
+
+        context.ChangeTracker.Clear();
+
+        // Act
+        var result = (await repo.GetByUserIdAsync(userA.Id)).ToList();
+
+        // Assert
+        result.Should().HaveCount(2, "omdat we filteren op User A en User B moeten negeren");
+
+        result.First().Text.Should().Be("Nieuw A");
+        result.Last().Text.Should().Be("Oud A");
+
+        result.First().User.Should().NotBeNull();
+        result.First().User!.FullName.Should().Be("Alice A");
+    }
+
+    [Fact]
+    public async Task GetByUserIdAsync_ShouldReturnEmptyList_WhenUserHasNoComments()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new CommentRepository(context);
+        var userId = Guid.NewGuid(); 
+
+        // Act
+        var result = await repo.GetByUserIdAsync(userId);
+
+        // Assert
+        result.Should().BeEmpty();
+    }
 }

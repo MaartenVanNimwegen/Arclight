@@ -172,4 +172,100 @@ public class UserEndpointsTests : BaseIntegrationTest
 
         content.Should().Contain("token");
     }
+
+
+    [Fact]
+    public async Task GetAllUsers_ShouldReturnOk_WithListOfUsers()
+    {
+        // Arrange
+        var request = new RegisterRequest("getall@test.nl", "Anna", "Anders", "Wachtwoord123!");
+        await Client.PostAsJsonAsync("/user/register", request);
+
+        // Act
+        var adminClient = CreateClientWithRoles("Admin");
+        var response = await adminClient.GetAsync("/user");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+
+    [Fact]
+    public async Task UpdateUser_ShouldReturnNoContent_WhenValidIdAndRole()
+    {
+        // Arrange
+        var request = new RegisterRequest("update@test.nl", "Piet", "Puk", "Wachtwoord123!");
+        var registerResponse = await Client.PostAsJsonAsync("/user/register", request);
+        var createdUserId = await registerResponse.Content.ReadFromJsonAsync<Guid>();
+
+        // Act
+        var adminClient = CreateClientWithRoles("Admin");
+        var response = await adminClient.PutAsync($"/user/{createdUserId}/Admin", null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task UpdateUser_ShouldReturnBadRequest_WhenRoleIsInvalid()
+    {
+        // Arrange
+        var request = new RegisterRequest("invalidrole@test.nl", "Piet", "Puk", "Wachtwoord123!");
+        var registerResponse = await Client.PostAsJsonAsync("/user/register", request);
+        var createdUserId = await registerResponse.Content.ReadFromJsonAsync<Guid>();
+
+        // Act
+        var adminClient = CreateClientWithRoles("Admin");
+        var response = await adminClient.PutAsync($"/user/{createdUserId}/OnbekendeRol", null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("Invalid role");
+    }
+
+    [Fact]
+    public async Task UpdateUser_ShouldReturnNotFound_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var randomId = Guid.NewGuid();
+
+        // Act
+        var adminClient = CreateClientWithRoles("Admin");
+        var response = await adminClient.PutAsync($"/user/{randomId}/Admin", null);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+
+    [Fact]
+    public async Task DeleteUser_ShouldReturnNoContent_WhenUserExists()
+    {
+        // Arrange
+        var request = new RegisterRequest("delete@test.nl", "Piet", "Puk", "Wachtwoord123!");
+        var registerResponse = await Client.PostAsJsonAsync("/user/register", request);
+        var createdUserId = await registerResponse.Content.ReadFromJsonAsync<Guid>();
+
+        // Act
+        var adminClient = CreateClientWithRoles("Admin");
+        var response = await adminClient.DeleteAsync($"/user/{createdUserId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+    }
+
+    [Fact]
+    public async Task DeleteUser_ShouldReturnNotFound_WhenUserDoesNotExist()
+    {
+        // Arrange
+        var randomId = Guid.NewGuid();
+
+        // Act
+        var adminClient = CreateClientWithRoles("Admin");
+        var response = await adminClient.DeleteAsync($"/user/{randomId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
 }
