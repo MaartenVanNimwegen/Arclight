@@ -19,7 +19,7 @@ namespace Arclight.Infrastructure.Repositories
 
         public async Task SaveChangesAsync() => await context.SaveChangesAsync();
 
-        public async Task<IEnumerable<User>> GetAllUsersAsync() => await context.Users.ToListAsync();
+        public async Task<IEnumerable<User>> GetAllUsersAsync() => await context.Users.AsNoTracking().ToListAsync();
 
         public async Task UpdateUserRoleAsync(Guid id, UserRole role)
         {
@@ -30,8 +30,6 @@ namespace Arclight.Infrastructure.Repositories
             }
                 
             user.ChangeRole(role);
-            context.Users.Update(user);
-            await context.SaveChangesAsync();
         }
 
         public void Delete(User user)

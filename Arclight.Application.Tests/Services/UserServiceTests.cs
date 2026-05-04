@@ -181,10 +181,12 @@ public class UserServiceTests
                      .ReturnsAsync(users);
 
         // Act
-        var result = await _sut.GetAllUsersAsync();
+        var result = (await _sut.GetAllUsersAsync()).ToList();
 
         // Assert
-        result.Should().BeEquivalentTo(users);
+        result.Should().HaveCount(2);
+        result.Should().Contain(r => r.Email == "user1@test.nl" && r.Role == "User");
+        result.Should().Contain(r => r.Email == "user2@test.nl" && r.Role == "Admin");
         _userRepoMock.Verify(repo => repo.GetAllUsersAsync(), Times.Once);
     }
 
@@ -201,6 +203,7 @@ public class UserServiceTests
 
         // Assert
         _userRepoMock.Verify(repo => repo.UpdateUserRoleAsync(userId, newRole), Times.Once);
+        _userRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
     }
 
 

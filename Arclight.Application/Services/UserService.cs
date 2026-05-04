@@ -58,14 +58,16 @@ public class UserService(IUserRepository userRepository, IArticleRepository arti
         return tokenGenerator.GenerateToken(user);
     }
 
-    public async Task<IEnumerable<User>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserResponse>> GetAllUsersAsync()
     {
-        return await userRepository.GetAllUsersAsync();
+        var users = await userRepository.GetAllUsersAsync();
+        return users.Select(u => new UserResponse(u.Id, u.Email, u.FirstName, u.LastName, u.Role.ToString(), u.Status.ToString()));
     }
 
-    public Task UpdateUserRoleAsync(Guid id, UserRole role)
+    public async Task UpdateUserRoleAsync(Guid id, UserRole role)
     {
-        return userRepository.UpdateUserRoleAsync(id, role);
+        await userRepository.UpdateUserRoleAsync(id, role);
+        await userRepository.SaveChangesAsync();
     }
 
     public async Task DeleteUserAsync(Guid userId)

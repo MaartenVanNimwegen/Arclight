@@ -107,6 +107,7 @@ public class UserRepositoryTests
 
         // Act
         await repo.UpdateUserRoleAsync(user.Id, UserRole.Admin);
+        await context.SaveChangesAsync();
 
         // Assert
         var updatedUser = await context.Users.FirstOrDefaultAsync(u => u.Id == user.Id);

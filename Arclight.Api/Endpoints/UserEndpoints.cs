@@ -8,6 +8,8 @@ namespace Arclight.Api.Endpoints
 {
     public static class UserEndpoints
     {
+        private static readonly string ValidRoles = string.Join(", ", Enum.GetNames<UserRole>());
+
         public static void MapUserEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/user");
@@ -67,21 +69,21 @@ namespace Arclight.Api.Endpoints
 
         static async Task<IResult> GetAllUsers(IUserService service)
         {
-            IEnumerable<User> users = await service.GetAllUsersAsync();
+            IEnumerable<UserResponse> users = await service.GetAllUsersAsync();
             return Results.Ok(users);
         }
 
         static async Task<IResult> UpdateUser(Guid id, string role, IUserService service)
         {
+            if (!Enum.TryParse<UserRole>(role, true, out UserRole parsedRole) || !Enum.IsDefined(parsedRole))
+            {
+                return Results.BadRequest(new { error = $"Invalid role. Valid roles are: {ValidRoles}." });
+            }
+
             try
             {
-                UserRole userRole = Enum.Parse<UserRole>(role, true);
-                await service.UpdateUserRoleAsync(id, userRole);
+                await service.UpdateUserRoleAsync(id, parsedRole);
                 return Results.NoContent();
-            }
-            catch (ArgumentException)
-            {
-                return Results.BadRequest(new { error = "Invalid role. Valid roles are: User, Admin." });
             }
             catch (KeyNotFoundException)
             {

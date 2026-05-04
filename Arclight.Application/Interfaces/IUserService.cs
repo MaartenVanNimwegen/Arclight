@@ -9,7 +9,7 @@ namespace Arclight.Application.Interfaces
         Task<Guid> CreateUserAsync(string email, string firstName, string lastName, string password, UserRole role);
         Task<User?> GetUserAsync(Guid id);
         Task<string?> LoginAsync(LoginRequest request);
-        Task<IEnumerable<User>> GetAllUsersAsync();
+        Task<IEnumerable<UserResponse>> GetAllUsersAsync();
         Task UpdateUserRoleAsync(Guid id, UserRole role);
         Task DeleteUserAsync(Guid id);
     }
