@@ -57,17 +57,7 @@ public class CommentService(
         if (comment is null) return false;
         if (comment.ArticleId != articleId) return false;
 
-        bool isOwner = comment.UserId == currentUserId;
-        bool isStaff = currentUserRole == UserRole.Admin || currentUserRole == UserRole.ContentCreator;
-
-        if (!isOwner && !isStaff)
-        {
-            throw new UnauthorizedAccessException("You don't have permission to delete this comment.");
-        }
-
-        commentRepository.Delete(comment);
-        await commentRepository.SaveChangesAsync();
-        return true;
+        return await AuthorizeAndDeleteAsync(comment, currentUserId, currentUserRole);
     }
 
     public async Task<IEnumerable<CommentResponse>> GetAllCommentsAsync()
@@ -87,12 +77,20 @@ public class CommentService(
     {
         var comment = await commentRepository.GetByIdAsync(commentId);
         if (comment is null) return false;
+
+        return await AuthorizeAndDeleteAsync(comment, userId, role);
+    }
+
+    private async Task<bool> AuthorizeAndDeleteAsync(Comment comment, Guid userId, UserRole role)
+    {
         bool isOwner = comment.UserId == userId;
         bool isStaff = role == UserRole.Admin || role == UserRole.ContentCreator;
+
         if (!isOwner && !isStaff)
         {
             throw new UnauthorizedAccessException("You don't have permission to delete this comment.");
         }
+
         commentRepository.Delete(comment);
         await commentRepository.SaveChangesAsync();
         return true;
