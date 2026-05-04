@@ -27,7 +27,7 @@ public static class CommentEndpoints
             .RequireAuthorization("RequireAdmin");
 
         adminGroup.MapDelete("{commentId:guid}", DeleteCommentByIdAdmin)
-            .RequireAuthorization("RequireAdmin");
+            .RequireAuthorization("RequireContentManager");
     }
 
     static async Task<IResult> GetCommentsByArticleId(Guid articleId, ICommentService service)
