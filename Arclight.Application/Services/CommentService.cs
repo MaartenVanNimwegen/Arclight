@@ -69,4 +69,32 @@ public class CommentService(
         await commentRepository.SaveChangesAsync();
         return true;
     }
+
+    public async Task<IEnumerable<CommentResponse>> GetAllCommentsAsync()
+    {
+        var comments = await commentRepository.GetAllAsync();
+
+        return comments.Select(c => new CommentResponse(
+            c.Id,
+            c.Text,
+            c.User?.FullName ?? "Unknown",
+            c.CreatedAt,
+            c.UserId
+        ));
+    }
+
+    public async Task<bool> DeleteCommentAsync(Guid commentId, Guid userId, UserRole role)
+    {
+        var comment = await commentRepository.GetByIdAsync(commentId);
+        if (comment is null) return false;
+        bool isOwner = comment.UserId == userId;
+        bool isStaff = role == UserRole.Admin || role == UserRole.ContentCreator;
+        if (!isOwner && !isStaff)
+        {
+            throw new UnauthorizedAccessException("You don't have permission to delete this comment.");
+        }
+        commentRepository.Delete(comment);
+        await commentRepository.SaveChangesAsync();
+        return true;
+    }
 }

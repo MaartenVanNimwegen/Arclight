@@ -20,12 +20,49 @@ public static class CommentEndpoints
 
         group.MapDelete("{commentId:guid}", DeleteCommentById)
             .RequireAuthorization();
+
+        var adminGroup = app.MapGroup("/admin/comments");
+
+        adminGroup.MapGet("", GetAllComments)
+            .RequireAuthorization("RequireAdmin");
+
+        adminGroup.MapDelete("{commentId:guid}", DeleteCommentByIdAdmin)
+            .RequireAuthorization("RequireAdmin");
     }
 
     static async Task<IResult> GetCommentsByArticleId(Guid articleId, ICommentService service)
     {
         var comments = await service.GetCommentsByArticleIdAsync(articleId);
         return Results.Ok(comments);
+    }
+
+    static async Task<IResult> GetAllComments(ICommentService service)
+    {
+        var comments = await service.GetAllCommentsAsync();
+        return Results.Ok(comments);
+    }
+
+    static async Task<IResult> DeleteCommentByIdAdmin(Guid commentId, ICommentService service, ClaimsPrincipal user)
+    {
+        Guid userId;
+        try
+        {
+            userId = user.GetUserId();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Unauthorized();
+        }
+        var role = user.GetUserRole();
+        try
+        {
+            var success = await service.DeleteCommentAsync(commentId, userId, role);
+            return success ? Results.Ok() : Results.NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Forbid();
+        }
     }
 
     static async Task<IResult> DeleteCommentById(

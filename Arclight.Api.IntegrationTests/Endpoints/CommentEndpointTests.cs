@@ -215,4 +215,138 @@ public class CommentEndpointsTests(CustomWebApplicationFactory factory) : BaseIn
 
         return articleId;
     }
+
+    [Fact]
+    public async Task GetAllComments_ShouldReturnOk_WithAllComments_WhenUserIsAdmin()
+    {
+        // Arrange
+        var articleId = await SeedArticleAsync();
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            context.Comments.Add(new Comment("Admin list comment", articleId, _testUserId));
+            await context.SaveChangesAsync();
+        });
+        
+        var adminClient = CreateClientWithRoles("Admin");
+
+        // Act
+        var response = await adminClient.GetAsync("/admin/comments");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var comments = await response.Content.ReadFromJsonAsync<IEnumerable<CommentResponse>>();
+        comments.Should().NotBeNull();
+        comments.Should().NotBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetAllComments_ShouldReturnForbidden_WhenUserIsNotAdmin()
+    {
+        // Arrange
+        var readerClient = CreateClientWithRoles("User");
+
+        // Act
+        var response = await readerClient.GetAsync("/admin/comments");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task DeleteCommentByIdAdmin_ShouldReturnOk_WhenUserIsStaff()
+    {
+        // Arrange
+        var articleId = await SeedArticleAsync();
+        var commentId = Guid.NewGuid();
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            var otherUser = new User("other_admin@test.nl", "O", "U", "hash", UserRole.User);
+            context.Users.Add(otherUser);
+            await context.SaveChangesAsync();
+
+            var comment = new Comment("Verwijder mij", articleId, otherUser.Id);
+            typeof(Comment).GetProperty("Id")?.SetValue(comment, commentId);
+            context.Comments.Add(comment);
+            await context.SaveChangesAsync();
+        });
+
+        var adminClient = CreateClientWithRoles("Admin");
+
+        // Act
+        var response = await adminClient.DeleteAsync($"/admin/comments/{commentId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
+
+    [Fact]
+    public async Task DeleteCommentByIdAdmin_ShouldReturnNotFound_WhenCommentDoesNotExist()
+    {
+        // Arrange
+        var adminClient = CreateClientWithRoles("Admin");
+
+        // Act
+        var response = await adminClient.DeleteAsync($"/admin/comments/{Guid.NewGuid()}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task DeleteCommentByIdAdmin_ShouldReturnForbidden_WhenUserIsRegularUser()
+    {
+        // Arrange
+        var articleId = await SeedArticleAsync();
+        var commentId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
+
+        await ExecuteDbContextAsync(async (context) =>
+        {
+            var otherUser = new User("random@test.nl", "R", "U", "hash", UserRole.User);
+            typeof(User).GetProperty("Id")?.SetValue(otherUser, otherUserId);
+            context.Users.Add(otherUser);
+
+            var comment = new Comment("Reactie", articleId, otherUserId);
+            typeof(Comment).GetProperty("Id")?.SetValue(comment, commentId);
+            context.Comments.Add(comment);
+            await context.SaveChangesAsync();
+        });
+
+        var readerClient = CreateClientWithRoles("Reader");
+
+        // Act
+        var response = await readerClient.DeleteAsync($"/admin/comments/{commentId}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task DeleteComment_ShouldReturnUnauthorized_WhenUserIsNotLoggedIn()
+    {
+        // Arrange
+        var articleId = await SeedArticleAsync();
+        var anonClient = CreateAnonymousClient();
+
+        // Act
+        var response = await anonClient.DeleteAsync($"/articles/{articleId}/comments/{Guid.NewGuid()}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
+    public async Task DeleteCommentByIdAdmin_ShouldReturnUnauthorized_WhenUserIsNotLoggedIn()
+    {
+        // Arrange
+        var anonClient = CreateAnonymousClient();
+
+        // Act
+        var response = await anonClient.DeleteAsync($"/admin/comments/{Guid.NewGuid()}");
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+    }
 }

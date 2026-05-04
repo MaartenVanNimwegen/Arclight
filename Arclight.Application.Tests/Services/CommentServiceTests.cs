@@ -227,4 +227,132 @@ public class CommentServiceTests
 
         _commentRepoMock.Verify(repo => repo.Delete(It.IsAny<Comment>()), Times.Never);
     }
+
+    [Fact]
+    public async Task GetAllCommentsAsync_ShouldReturnMappedCommentResponses()
+    {
+        // Arrange
+        var articleId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var user = new User("test@test.nl", "Klaas", "Vaak", "hash", UserRole.User);
+
+        var comment = new Comment("Hallo daar", articleId, userId);
+
+        typeof(Comment).GetProperty("User")?.SetValue(comment, user);
+
+        var comments = new List<Comment> { comment };
+
+        _commentRepoMock.Setup(repo => repo.GetAllAsync())
+                        .ReturnsAsync(comments);
+
+        // Act
+        var result = (await _sut.GetAllCommentsAsync()).ToList();
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].Text.Should().Be("Hallo daar");
+        result[0].AuthorName.Should().Be("Klaas Vaak");
+        result[0].UserId.Should().Be(userId);
+
+        _commentRepoMock.Verify(repo => repo.GetAllAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllCommentsAsync_ShouldReturnUnknownAuthorName_WhenUserIsNull()
+    {
+        // Arrange
+        var comment = new Comment("Anonieme reactie", Guid.NewGuid(), Guid.NewGuid());
+
+        _commentRepoMock.Setup(repo => repo.GetAllAsync())
+                        .ReturnsAsync(new List<Comment> { comment });
+
+        // Act
+        var result = (await _sut.GetAllCommentsAsync()).ToList();
+
+        // Assert
+        result.Should().HaveCount(1);
+        result[0].AuthorName.Should().Be("Unknown");
+    }
+
+
+    [Fact]
+    public async Task DeleteCommentAsync_NoArticleId_ShouldReturnFalse_WhenCommentDoesNotExist()
+    {
+        // Arrange
+        var commentId = Guid.NewGuid();
+        _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
+                        .ReturnsAsync((Comment?)null);
+
+        // Act
+        var result = await _sut.DeleteCommentAsync(commentId, Guid.NewGuid(), UserRole.Admin);
+
+        // Assert
+        result.Should().BeFalse();
+        _commentRepoMock.Verify(repo => repo.Delete(It.IsAny<Comment>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_NoArticleId_ShouldReturnTrue_WhenUserIsOwner()
+    {
+        // Arrange
+        var commentId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var comment = new Comment("X", Guid.NewGuid(), ownerId);
+
+        _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
+                        .ReturnsAsync(comment);
+
+        // Act
+        var result = await _sut.DeleteCommentAsync(commentId, ownerId, UserRole.User);
+
+        // Assert
+        result.Should().BeTrue();
+        _commentRepoMock.Verify(repo => repo.Delete(comment), Times.Once);
+        _commentRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
+    [Theory]
+    [InlineData(UserRole.Admin)]
+    [InlineData(UserRole.ContentCreator)]
+    public async Task DeleteCommentAsync_NoArticleId_ShouldReturnTrue_WhenUserIsStaff_RegardlessOfOwner(UserRole staffRole)
+    {
+        // Arrange
+        var commentId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var staffId = Guid.NewGuid(); 
+        var comment = new Comment("X", Guid.NewGuid(), ownerId);
+
+        _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
+                        .ReturnsAsync(comment);
+
+        // Act
+        var result = await _sut.DeleteCommentAsync(commentId, staffId, staffRole);
+
+        // Assert
+        result.Should().BeTrue();
+        _commentRepoMock.Verify(repo => repo.Delete(comment), Times.Once);
+        _commentRepoMock.Verify(repo => repo.SaveChangesAsync(), Times.Once);
+    }
+
+    [Fact]
+    public async Task DeleteCommentAsync_NoArticleId_ShouldThrowUnauthorizedAccessException_WhenNotOwnerAndNotStaff()
+    {
+        // Arrange
+        var commentId = Guid.NewGuid();
+        var ownerId = Guid.NewGuid();
+        var randomUserId = Guid.NewGuid();
+        var comment = new Comment("X", Guid.NewGuid(), ownerId);
+
+        _commentRepoMock.Setup(repo => repo.GetByIdAsync(commentId))
+                        .ReturnsAsync(comment);
+
+        // Act
+        var act = () => _sut.DeleteCommentAsync(commentId, randomUserId, UserRole.User);
+
+        // Assert
+        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+            .WithMessage("You don't have permission to delete this comment.");
+
+        _commentRepoMock.Verify(repo => repo.Delete(It.IsAny<Comment>()), Times.Never);
+    }
 }

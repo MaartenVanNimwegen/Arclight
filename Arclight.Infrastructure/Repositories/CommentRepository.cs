@@ -46,4 +46,12 @@ public class CommentRepository(AppDbContext context) : ICommentRepository
             .OrderByDescending(c => c.CreatedAt)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Comment>> GetAllAsync()
+    {
+        return await context.Comments
+            .Include(c => c.User)
+            .OrderByDescending(c => c.CreatedAt)
+            .ToListAsync();
+    }
 }
