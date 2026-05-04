@@ -25,7 +25,7 @@ public static class CommentEndpoints
         var adminGroup = app.MapGroup("/admin/comments");
 
         adminGroup.MapGet("", GetAllComments)
-            .RequireAuthorization("RequireAdmin");
+            .RequireAuthorization("RequireContentManager");
 
         adminGroup.MapDelete("{commentId:guid}", DeleteCommentByIdAdmin)
             .RequireAuthorization("RequireContentManager");
