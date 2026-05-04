@@ -268,29 +268,4 @@ public class UserEndpointsTests : BaseIntegrationTest
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
-
-    [Fact(Skip = "Business rule (e.g. cannot delete last admin) not yet implemented")]
-    public async Task DeleteUser_ShouldReturnConflict_WhenBusinessRuleIsViolated()
-    {
-        // Arrange
-        // Let op: Afhankelijk van je business logica gooit de service een InvalidOperationException.
-        // Bijvoorbeeld: "Je kunt de laatste admin niet verwijderen". 
-        // Pas de Arrange hieronder aan om die specifieke situatie te simuleren!
-
-        var request = new RegisterRequest("conflict@test.nl", "Piet", "Puk", "Wachtwoord123!");
-        var registerResponse = await Client.PostAsJsonAsync("/user/register", request);
-        var createdUserId = await registerResponse.Content.ReadFromJsonAsync<Guid>();
-
-        // Zorg er hier voor dat de user in de staat komt die de InvalidOperationException triggert.
-        // Mocht je deze rule nog niet hebben geïmplementeerd in je service, 
-        // dan kun je deze test voor nu uitschakelen of als placeholder gebruiken.
-
-        // Act
-        // var response = await Client.DeleteAsync($"/user/{createdUserId}");
-
-        // Assert
-        // response.StatusCode.Should().Be(HttpStatusCode.Conflict);
-        // var content = await response.Content.ReadAsStringAsync();
-        // content.Should().Contain("verwachte error message");
-    }
 }
