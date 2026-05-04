@@ -2,6 +2,7 @@
 using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
+using Arclight.Domain.Enums;
 using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints;
@@ -42,34 +43,17 @@ public static class CommentEndpoints
         return Results.Ok(comments);
     }
 
-    static async Task<IResult> DeleteCommentByIdAdmin(Guid commentId, ICommentService service, ClaimsPrincipal user)
-    {
-        Guid userId;
-        try
-        {
-            userId = user.GetUserId();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Results.Unauthorized();
-        }
-        var role = user.GetUserRole();
-        try
-        {
-            var success = await service.DeleteCommentAsync(commentId, userId, role);
-            return success ? Results.Ok() : Results.NotFound();
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Results.Forbid();
-        }
-    }
+    static Task<IResult> DeleteCommentByIdAdmin(Guid commentId, ICommentService service, ClaimsPrincipal user)
+        => ExecuteDeleteAsync(user, (userId, role) => service.DeleteCommentAsync(commentId, userId, role));
 
-    static async Task<IResult> DeleteCommentById(
+    static Task<IResult> DeleteCommentById(
     Guid articleId,
     Guid commentId,
     ICommentService service,
     ClaimsPrincipal user)
+        => ExecuteDeleteAsync(user, (userId, role) => service.DeleteCommentAsync(articleId, commentId, userId, role));
+
+    static async Task<IResult> ExecuteDeleteAsync(ClaimsPrincipal user, Func<Guid, UserRole, Task<bool>> deleteAction)
     {
         Guid userId;
         try
@@ -84,7 +68,7 @@ public static class CommentEndpoints
         var role = user.GetUserRole();
         try
         {
-            var success = await service.DeleteCommentAsync(articleId, commentId, userId, role);
+            var success = await deleteAction(userId, role);
             return success ? Results.Ok() : Results.NotFound();
         }
         catch (UnauthorizedAccessException)
