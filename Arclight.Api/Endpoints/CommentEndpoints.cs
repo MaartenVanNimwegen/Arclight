@@ -2,6 +2,7 @@
 using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
+using Arclight.Domain.Enums;
 using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints;
@@ -20,6 +21,14 @@ public static class CommentEndpoints
 
         group.MapDelete("{commentId:guid}", DeleteCommentById)
             .RequireAuthorization();
+
+        var adminGroup = app.MapGroup("/admin/comments");
+
+        adminGroup.MapGet("", GetAllComments)
+            .RequireAuthorization("RequireContentManager");
+
+        adminGroup.MapDelete("{commentId:guid}", DeleteCommentByIdAdmin)
+            .RequireAuthorization("RequireContentManager");
     }
 
     static async Task<IResult> GetCommentsByArticleId(Guid articleId, ICommentService service)
@@ -28,11 +37,23 @@ public static class CommentEndpoints
         return Results.Ok(comments);
     }
 
-    static async Task<IResult> DeleteCommentById(
+    static async Task<IResult> GetAllComments(ICommentService service)
+    {
+        var comments = await service.GetAllCommentsAsync();
+        return Results.Ok(comments);
+    }
+
+    static Task<IResult> DeleteCommentByIdAdmin(Guid commentId, ICommentService service, ClaimsPrincipal user)
+        => ExecuteDeleteAsync(user, (userId, role) => service.DeleteCommentAsync(commentId, userId, role));
+
+    static Task<IResult> DeleteCommentById(
     Guid articleId,
     Guid commentId,
     ICommentService service,
     ClaimsPrincipal user)
+        => ExecuteDeleteAsync(user, (userId, role) => service.DeleteCommentAsync(articleId, commentId, userId, role));
+
+    static async Task<IResult> ExecuteDeleteAsync(ClaimsPrincipal user, Func<Guid, UserRole, Task<bool>> deleteAction)
     {
         Guid userId;
         try
@@ -47,7 +68,7 @@ public static class CommentEndpoints
         var role = user.GetUserRole();
         try
         {
-            var success = await service.DeleteCommentAsync(articleId, commentId, userId, role);
+            var success = await deleteAction(userId, role);
             return success ? Results.Ok() : Results.NotFound();
         }
         catch (UnauthorizedAccessException)

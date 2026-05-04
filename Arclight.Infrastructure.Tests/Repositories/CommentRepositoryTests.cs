@@ -199,4 +199,69 @@ public class CommentRepositoryTests
         // Assert
         result.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnAllComments_SortedByNewestFirst_AndIncludeUser()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new CommentRepository(context);
+
+        var userA = new User("alice@test.nl", "Alice", "A", "hash", UserRole.User);
+        var userB = new User("bob@test.nl", "Bob", "B", "hash", UserRole.User);
+        var category = new Category("Test", "test", "desc");
+        var article = new Article("Titel", "slug", "sum", "content", userA.Id, category.Id);
+
+        context.Users.AddRange(userA, userB);
+        context.Categories.Add(category);
+        context.Articles.Add(article);
+        await context.SaveChangesAsync();
+
+        var oldestComment = new Comment("Oudste", article.Id, userA.Id);
+        var middleComment = new Comment("Middelste", article.Id, userB.Id);
+        var newestComment = new Comment("Nieuwste", article.Id, userA.Id);
+
+        context.Comments.AddRange(oldestComment, middleComment, newestComment);
+        await context.SaveChangesAsync();
+
+        var oldestDate = DateTimeOffset.UtcNow.AddHours(-2);
+        var middleDate = DateTimeOffset.UtcNow.AddHours(-1);
+        var newestDate = DateTimeOffset.UtcNow;
+
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(oldestComment, (DateTimeOffset?)oldestDate);
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(middleComment, (DateTimeOffset?)middleDate);
+        typeof(Comment).GetProperty("CreatedAt")?.SetValue(newestComment, (DateTimeOffset?)newestDate);
+
+        await context.SaveChangesAsync();
+
+        context.ChangeTracker.Clear();
+
+        // Act
+        var result = (await repo.GetAllAsync()).ToList();
+
+        // Assert
+        result.Should().HaveCount(3, "omdat we alle comments in de database willen ophalen");
+
+        result[0].Text.Should().Be("Nieuwste");
+        result[1].Text.Should().Be("Middelste");
+        result[2].Text.Should().Be("Oudste");
+
+        result[0].User.Should().NotBeNull();
+        result[0].User!.FullName.Should().Be("Alice A");
+        result[1].User!.FullName.Should().Be("Bob B");
+    }
+
+    [Fact]
+    public async Task GetAllAsync_ShouldReturnEmptyList_WhenDatabaseHasNoComments()
+    {
+        // Arrange
+        var context = GetDbContext();
+        var repo = new CommentRepository(context);
+
+        // Act
+        var result = await repo.GetAllAsync();
+
+        // Assert
+        result.Should().BeEmpty("er zitten nog geen comments in de database");
+    }
 }

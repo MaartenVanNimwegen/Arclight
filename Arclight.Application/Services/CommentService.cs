@@ -57,8 +57,34 @@ public class CommentService(
         if (comment is null) return false;
         if (comment.ArticleId != articleId) return false;
 
-        bool isOwner = comment.UserId == currentUserId;
-        bool isStaff = currentUserRole == UserRole.Admin || currentUserRole == UserRole.ContentCreator;
+        return await AuthorizeAndDeleteAsync(comment, currentUserId, currentUserRole);
+    }
+
+    public async Task<IEnumerable<CommentResponse>> GetAllCommentsAsync()
+    {
+        var comments = await commentRepository.GetAllAsync();
+
+        return comments.Select(c => new CommentResponse(
+            c.Id,
+            c.Text,
+            c.User?.FullName ?? "Unknown",
+            c.CreatedAt,
+            c.UserId
+        ));
+    }
+
+    public async Task<bool> DeleteCommentAsync(Guid commentId, Guid userId, UserRole role)
+    {
+        var comment = await commentRepository.GetByIdAsync(commentId);
+        if (comment is null) return false;
+
+        return await AuthorizeAndDeleteAsync(comment, userId, role);
+    }
+
+    private async Task<bool> AuthorizeAndDeleteAsync(Comment comment, Guid userId, UserRole role)
+    {
+        bool isOwner = comment.UserId == userId;
+        bool isStaff = role == UserRole.Admin || role == UserRole.ContentCreator;
 
         if (!isOwner && !isStaff)
         {
