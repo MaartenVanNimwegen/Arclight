@@ -11,7 +11,7 @@ namespace Arclight.Api.Endpoints;
 
 public static class ArticleEndpoints
 {
-    public static void MapArticleEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointConventionBuilder MapArticleEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/articles");
 
@@ -29,6 +29,8 @@ public static class ArticleEndpoints
         group.MapPatch("/{id:guid}/publish", PublishArticle).RequireAuthorization("RequireContentManager");
         group.MapDelete("/{id:guid}", DeleteArticle).RequireAuthorization("RequireContentManager");
         group.MapGet("/drafts", GetAllUnpublishedArticles).RequireAuthorization("RequireContentManager");
+
+        return group;
     }
 
     static async Task<IResult> GetAllArticles(IArticleService service)

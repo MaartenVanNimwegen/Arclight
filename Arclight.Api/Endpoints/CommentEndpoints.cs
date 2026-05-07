@@ -8,7 +8,7 @@ using System.Security.Claims;
 namespace Arclight.Api.Endpoints;
 public static class CommentEndpoints
 {
-    public static void MapCommentEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointConventionBuilder MapCommentEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/articles/{articleId:guid}/comments");
 
@@ -29,6 +29,8 @@ public static class CommentEndpoints
 
         adminGroup.MapDelete("{commentId:guid}", DeleteCommentByIdAdmin)
             .RequireAuthorization("RequireContentManager");
+
+        return group;
     }
 
     static async Task<IResult> GetCommentsByArticleId(Guid articleId, ICommentService service)
