@@ -28,6 +28,10 @@ namespace Arclight.Api.Endpoints
             group.MapPut("/{id:guid}/{role}", UpdateUser)
                 .RequireAuthorization("RequireAdmin");
 
+            group.MapPut("/{id:guid}", UpdateProfile)
+                .RequireAuthorization()
+                .AddEndpointFilter<ValidationFilter<UpdateProfileRequest>>();
+
             group.MapDelete("/{id:guid}", DeleteUser)
                 .RequireAuthorization("RequireAdmin");
 
@@ -108,6 +112,19 @@ namespace Arclight.Api.Endpoints
             catch (InvalidOperationException ex)
             {
                 return Results.Conflict(new { error = ex.Message });
+            }
+        }
+
+        static async Task<IResult> UpdateProfile(Guid id, UpdateProfileRequest request, IUserService service)
+        {
+            try
+            {
+                await service.UpdateUserProfileAsync(id, request.FirstName, request.LastName);
+                return Results.NoContent();
+            }
+            catch (KeyNotFoundException)
+            {
+                return Results.NotFound(new { error = "User not found." });
             }
         }
     }

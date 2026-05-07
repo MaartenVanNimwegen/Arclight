@@ -12,5 +12,6 @@ namespace Arclight.Application.Interfaces
         Task<IEnumerable<UserResponse>> GetAllUsersAsync();
         Task UpdateUserRoleAsync(Guid id, UserRole role);
         Task DeleteUserAsync(Guid id);
+        Task UpdateUserProfileAsync(Guid id, string firstName, string lastName);
     }
 }
