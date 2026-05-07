@@ -29,6 +29,8 @@ public class EmailService : IEmailService
             throw new InvalidOperationException("Email configuration is missing: EmailSettings:Username is required.");
         if (string.IsNullOrWhiteSpace(smtpPass))
             throw new InvalidOperationException("Email configuration is missing: EmailSettings:Password is required.");
+        if (string.IsNullOrWhiteSpace(smtpPortRaw))
+            throw new InvalidOperationException("Email configuration is missing: EmailSettings:Port is required.");
         if (!int.TryParse(smtpPortRaw, out var smtpPort))
             throw new InvalidOperationException("Email configuration is invalid: EmailSettings:Port must be a valid integer.");
 
