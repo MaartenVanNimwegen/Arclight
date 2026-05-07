@@ -17,11 +17,20 @@ public class EmailService : IEmailService
     public async Task SendEmailAsync(List<string> bccEmails, string subject, string body)
     {
         var smtpHost = _configuration["EmailSettings:Host"];
-        var smtpPort = int.Parse(_configuration["EmailSettings:Port"] ?? "587");
+        var smtpPortRaw = _configuration["EmailSettings:Port"];
         var smtpUser = _configuration["EmailSettings:Username"];
         var smtpPass = _configuration["EmailSettings:Password"];
         var fromEmail = _configuration["EmailSettings:FromEmail"] ?? "noreply@arclight.nl";
         var fromName = _configuration["EmailSettings:FromName"] ?? "Arclight Newsletter";
+
+        if (string.IsNullOrWhiteSpace(smtpHost))
+            throw new InvalidOperationException("Email configuration is missing: EmailSettings:Host is required.");
+        if (string.IsNullOrWhiteSpace(smtpUser))
+            throw new InvalidOperationException("Email configuration is missing: EmailSettings:Username is required.");
+        if (string.IsNullOrWhiteSpace(smtpPass))
+            throw new InvalidOperationException("Email configuration is missing: EmailSettings:Password is required.");
+        if (!int.TryParse(smtpPortRaw, out var smtpPort))
+            throw new InvalidOperationException("Email configuration is invalid: EmailSettings:Port must be a valid integer.");
 
         using var client = new SmtpClient(smtpHost, smtpPort)
         {
@@ -29,7 +38,7 @@ public class EmailService : IEmailService
             EnableSsl = true
         };
 
-        var mailMessage = new MailMessage
+        using var mailMessage = new MailMessage
         {
             From = new MailAddress(fromEmail, fromName),
             Subject = subject,
