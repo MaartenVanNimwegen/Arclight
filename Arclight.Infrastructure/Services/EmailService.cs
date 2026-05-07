@@ -20,6 +20,8 @@ public class EmailService : IEmailService
         var smtpPort = int.Parse(_configuration["EmailSettings:Port"] ?? "587");
         var smtpUser = _configuration["EmailSettings:Username"];
         var smtpPass = _configuration["EmailSettings:Password"];
+        var fromEmail = _configuration["EmailSettings:FromEmail"] ?? "noreply@arclight.nl";
+        var fromName = _configuration["EmailSettings:FromName"] ?? "Arclight Newsletter";
 
         using var client = new SmtpClient(smtpHost, smtpPort)
         {
@@ -29,7 +31,7 @@ public class EmailService : IEmailService
 
         var mailMessage = new MailMessage
         {
-            From = new MailAddress(smtpUser!, "Arclight Newsletter"),
+            From = new MailAddress(fromEmail, fromName),
             Subject = subject,
             Body = body,
             IsBodyHtml = true
