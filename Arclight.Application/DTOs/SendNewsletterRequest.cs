@@ -1,0 +1,1 @@
+﻿public record SendNewsletterRequest(string Subject, string Body);

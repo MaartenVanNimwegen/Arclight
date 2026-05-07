@@ -81,5 +81,21 @@
 
             SetUpdatedDate();
         }
+
+        /// <summary>
+        /// Links the subscriber to a user account by setting the UserId.
+        /// Is used when a logged-in user subscribes with an email that wasn't previously linked to their account, or wanneer een gebruiker zich aanmeldt terwijl ze al een abonnement hebben met dat e-mailadres.
+        /// </summary>
+        public void LinkToUser(Guid userId)
+        {
+            if (userId == Guid.Empty)
+                throw new ArgumentException("UserId mag niet leeg zijn.");
+
+            if (UserId == userId) return;
+
+            UserId = userId;
+
+            SetUpdatedDate();
+        }
     }
 }
