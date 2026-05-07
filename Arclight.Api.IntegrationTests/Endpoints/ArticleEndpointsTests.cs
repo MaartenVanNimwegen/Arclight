@@ -406,4 +406,27 @@ public class ArticleEndpointsTests : BaseIntegrationTest
         articles.Should().Contain(a => a.Title == "Drafts Only Draft");
         articles.Should().NotContain(a => a.Title == "Drafts Only Published");
     }
+
+    [Fact]
+    public async Task GetAllArticles_ShouldReturnServiceUnavailable_WhenRateLimitExceeded()
+    {
+        // Arrange
+        int requestCount = 15;
+        var tasks = new List<Task<HttpResponseMessage>>();
+
+        // Act
+        for (int i = 0; i < requestCount; i++)
+        {
+            tasks.Add(Client.GetAsync("/articles"));
+        }
+
+        var responses = await Task.WhenAll(tasks);
+
+        // Assert
+        var hasRateLimitResponse = responses.Any(r =>
+            r.StatusCode == HttpStatusCode.ServiceUnavailable ||
+            r.StatusCode == HttpStatusCode.TooManyRequests);
+
+        hasRateLimitResponse.Should().BeTrue(because: "we hebben de limiet van 10 requests per 10 seconden ruimschoots overschreden");
+    }
 }

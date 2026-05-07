@@ -10,7 +10,7 @@ namespace Arclight.Api.Endpoints
     {
         private static readonly string ValidRoles = string.Join(", ", Enum.GetNames<UserRole>());
 
-        public static void MapUserEndpoints(this IEndpointRouteBuilder app)
+        public static IEndpointConventionBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/user");
 
@@ -30,6 +30,8 @@ namespace Arclight.Api.Endpoints
 
             group.MapDelete("/{id:guid}", DeleteUser)
                 .RequireAuthorization("RequireAdmin");
+
+            return group;
         }
 
         static async Task<IResult> CreateUser(RegisterRequest request, IUserService service)

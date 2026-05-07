@@ -6,7 +6,7 @@ namespace Arclight.Api.Endpoints;
 
 public static class CategoryEndpoints
 {
-    public static void MapCategoryEndpoints(this IEndpointRouteBuilder app)
+    public static IEndpointConventionBuilder MapCategoryEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/categories");
 
@@ -21,6 +21,8 @@ public static class CategoryEndpoints
         group.MapPut("/{id:guid}", UpdateCategory)
             .RequireAuthorization("RequireAdmin")
             .AddEndpointFilter<ValidationFilter<UpdateCategoryRequest>>();
+        
+        return group;
     }
 
     static async Task<IResult> GetAllCategories(ICategoryService service)
