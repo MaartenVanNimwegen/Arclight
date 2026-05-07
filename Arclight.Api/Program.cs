@@ -141,6 +141,7 @@ namespace Arclight.Api
             app.MapArticleEndpoints();
             app.MapCategoryEndpoints();
             app.MapCommentEndpoints();
+            app.MapNewsletterEndpoints();
 
             app.Run();
         }
