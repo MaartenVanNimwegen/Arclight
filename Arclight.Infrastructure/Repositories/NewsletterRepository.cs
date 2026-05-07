@@ -22,13 +22,12 @@ public class NewsletterRepository : INewsletterRepository
     public async Task AddAsync(Subscriber subscriber)
     {
         await _context.Subscribers.AddAsync(subscriber);
-        await _context.SaveChangesAsync();
     }
 
-    public async Task UpdateAsync(Subscriber subscriber)
+    public Task UpdateAsync(Subscriber subscriber)
     {
         _context.Subscribers.Update(subscriber);
-        await _context.SaveChangesAsync();
+        return Task.CompletedTask;
     }
 
     public Task<List<string>> GetAllActiveEmailsAsync()
@@ -37,5 +36,10 @@ public class NewsletterRepository : INewsletterRepository
             .Where(s => s.IsActive)
             .Select(s => s.Email)
             .ToListAsync();
+    }
+
+    public async Task SaveChangesAsync()
+    {
+        await _context.SaveChangesAsync();
     }
 }

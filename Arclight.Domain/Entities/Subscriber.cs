@@ -1,101 +1,101 @@
-﻿namespace Arclight.Domain.Entities
+﻿namespace Arclight.Domain.Entities;
+
+public class Subscriber : Entity
 {
-    public class Subscriber : Entity
+    public string Email { get; private set; }
+    public bool IsActive { get; private set; }
+    public DateTimeOffset SubscribedAt { get; private set; }
+    public DateTimeOffset? UnsubscribedAt { get; private set; }
+
+    public Guid? UserId { get; private set; }
+
+    // Navigation property for EF Core
+    public User? User { get; private set; }
+
+    /// <summary>
+    /// Constructor for anonymous subscribers (without account)
+    /// </summary>
+    public Subscriber(string email) : base()
     {
-        public string Email { get; private set; }
-        public bool IsActive { get; private set; }
-        public DateTimeOffset SubscribedAt { get; private set; }
-        public DateTimeOffset? UnsubscribedAt { get; private set; }
+        if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email address is required.");
+        if (!email.Contains('@')) throw new ArgumentException("Invalid email address format.");
 
-        public Guid? UserId { get; private set; }
+        Email = email.ToLowerInvariant().Trim();
+        IsActive = true;
+        SubscribedAt = DateTimeOffset.UtcNow;
+    }
 
-        // Navigation Property voor EF Core
-        public User? User { get; private set; }
+    /// <summary>
+    /// Constructor for subscribers linked to a user account.
+    /// </summary>
+    public Subscriber(string email, Guid userId) : this(email)
+    {
+        if (userId == Guid.Empty) throw new ArgumentException("UserId must not be empty.");
 
-        /// <summary>
-        /// Constructor for anonymous subscribers (without account)
-        /// </summary>
-        public Subscriber(string email) : base()
-        {
-            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("E-mailadres is verplicht");
-            if (!email.Contains('@')) throw new ArgumentException("Ongeldig e-mailadres formaat");
+        UserId = userId;
+    }
 
-            Email = email.ToLowerInvariant().Trim();
-            IsActive = true;
-            SubscribedAt = DateTimeOffset.UtcNow;
-        }
+    protected Subscriber() { }
 
-        /// <summary>
-        /// Constructor for subscribers linked to a user account.
-        /// </summary>
-        public Subscriber(string email, Guid userId) : this(email)
-        {
-            if (userId == Guid.Empty) throw new ArgumentException("UserId mag niet leeg zijn");
+    // --- Domain Behaviors ---
 
-            UserId = userId;
-        }
+    /// <summary>
+    /// Changes the email address of the subscriber.
+    /// </summary>
+    public void ChangeEmail(string newEmail)
+    {
+        if (string.IsNullOrWhiteSpace(newEmail)) throw new ArgumentException("Email address must not be empty.");
+        if (!newEmail.Contains('@')) throw new ArgumentException("Invalid email address format.");
 
-        protected Subscriber() { }
+        var formattedEmail = newEmail.ToLowerInvariant().Trim();
 
-        // --- Domain Behaviors ---
+        if (Email == formattedEmail) return;
 
-        /// <summary>
-        /// Changes the email address of the subscriber.
-        /// </summary>
-        public void ChangeEmail(string newEmail)
-        {
-            if (string.IsNullOrWhiteSpace(newEmail)) throw new ArgumentException("E-mailadres mag niet leeg zijn");
-            if (!newEmail.Contains('@')) throw new ArgumentException("Ongeldig e-mailadres formaat");
+        Email = formattedEmail;
 
-            var formattedEmail = newEmail.ToLowerInvariant().Trim();
+        SetUpdatedDate();
+    }
 
-            if (Email == formattedEmail) return;
+    /// <summary>
+    /// Unsubscribes the subscriber, marking them as inactive and recording the unsubscribed date.
+    /// </summary>
+    public void Unsubscribe()
+    {
+        if (!IsActive) return;
 
-            Email = formattedEmail;
+        IsActive = false;
+        UnsubscribedAt = DateTimeOffset.UtcNow;
 
-            SetUpdatedDate();
-        }
+        SetUpdatedDate();
+    }
 
-        /// <summary>
-        /// Unsubscribes the subscriber, marking them as inactive and recording the unsubscribed date.
-        /// </summary>
-        public void Unsubscribe()
-        {
-            if (!IsActive) return;
+    /// <summary>
+    /// Resubscribes the subscriber, marking them as active and clearing the unsubscribed date.
+    /// </summary>
+    public void Resubscribe()
+    {
+        if (IsActive) return;
 
-            IsActive = false;
-            UnsubscribedAt = DateTimeOffset.UtcNow;
+        IsActive = true;
+        UnsubscribedAt = null;
 
-            SetUpdatedDate();
-        }
+        SetUpdatedDate();
+    }
 
-        /// <summary>
-        /// Resubscribes the subscriber, marking them as active and clearing the unsubscribed date.
-        /// </summary>
-        public void Resubscribe()
-        {
-            if (IsActive) return;
+    /// <summary>
+    /// Links the subscriber to a user account by setting the UserId.
+    /// Used when a logged-in user subscribes with an email that wasn't previously linked to their account,
+    /// or when a user logs in while already having a subscription with that email address.
+    /// </summary>
+    public void LinkToUser(Guid userId)
+    {
+        if (userId == Guid.Empty)
+            throw new ArgumentException("UserId must not be empty.");
 
-            IsActive = true;
-            UnsubscribedAt = null;
+        if (UserId == userId) return;
 
-            SetUpdatedDate();
-        }
+        UserId = userId;
 
-        /// <summary>
-        /// Links the subscriber to a user account by setting the UserId.
-        /// Is used when a logged-in user subscribes with an email that wasn't previously linked to their account, or wanneer een gebruiker zich aanmeldt terwijl ze al een abonnement hebben met dat e-mailadres.
-        /// </summary>
-        public void LinkToUser(Guid userId)
-        {
-            if (userId == Guid.Empty)
-                throw new ArgumentException("UserId mag niet leeg zijn.");
-
-            if (UserId == userId) return;
-
-            UserId = userId;
-
-            SetUpdatedDate();
-        }
+        SetUpdatedDate();
     }
 }

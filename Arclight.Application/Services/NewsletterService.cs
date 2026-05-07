@@ -35,6 +35,7 @@ public class NewsletterService : INewsletterService
                 }
 
                 await _repository.UpdateAsync(existingSubscriber);
+                await _repository.SaveChangesAsync();
                 return "Welkom terug! Je bent weer ingeschreven.";
             }
 
@@ -46,6 +47,7 @@ public class NewsletterService : INewsletterService
             : new Subscriber(emailToSave);
 
         await _repository.AddAsync(newSubscriber);
+        await _repository.SaveChangesAsync();
 
         return "Bedankt voor je inschrijving!";
     }

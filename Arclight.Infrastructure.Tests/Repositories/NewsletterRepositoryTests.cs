@@ -66,6 +66,7 @@ public class NewsletterRepositoryTests
 
         // Act
         await repo.AddAsync(subscriber);
+        await repo.SaveChangesAsync();
 
         // Assert
         var savedSubscriber = await context.Subscribers.FirstOrDefaultAsync(s => s.Email == "new@test.nl");
@@ -83,12 +84,13 @@ public class NewsletterRepositoryTests
         context.Subscribers.Add(subscriber);
         await context.SaveChangesAsync();
 
-        // Act - Verander de status naar inactief via de domain behavior
+        // Act - Change status to inactive via domain behavior
         subscriber.Unsubscribe();
         await repo.UpdateAsync(subscriber);
+        await repo.SaveChangesAsync();
 
         // Assert
-        context.ChangeTracker.Clear(); // Forceer herladen uit de in-memory db
+        context.ChangeTracker.Clear(); // Force reload from the in-memory db
         var updatedSubscriber = await context.Subscribers.FirstOrDefaultAsync(s => s.Email == "update@test.nl");
         updatedSubscriber!.IsActive.Should().BeFalse();
         updatedSubscriber.UnsubscribedAt.Should().NotBeNull();

@@ -40,6 +40,10 @@ public static class NewsletterEndpoints
 
             return Results.Ok(new { message = successMessage });
         }
+        catch (UnauthorizedAccessException)
+        {
+            return Results.Unauthorized();
+        }
         catch (ArgumentException ex)
         {
             return Results.BadRequest(new { error = ex.Message });

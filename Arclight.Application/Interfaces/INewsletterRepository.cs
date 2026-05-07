@@ -8,4 +8,5 @@ public interface INewsletterRepository
     Task AddAsync(Subscriber subscriber);
     Task UpdateAsync(Subscriber subscriber);
     Task<List<string>> GetAllActiveEmailsAsync();
+    Task SaveChangesAsync();
 }

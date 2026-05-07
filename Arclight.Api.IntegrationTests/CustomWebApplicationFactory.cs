@@ -39,6 +39,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             services.RemoveAll(typeof(System.Data.Common.DbConnection));
 
             var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock
+                .Setup(e => e.SendEmailAsync(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
             services.AddScoped<IEmailService>(_ => emailServiceMock.Object);
 
             services.AddSingleton<DbContextOptions<AppDbContext>>(provider =>

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace Arclight.Application.Interfaces;
 
-namespace Arclight.Application.Interfaces
+public interface IEmailService
 {
-    public interface IEmailService
-    {
-        Task SendEmailAsync(List<string> bccEmails, string subject, string body);
-    }
+    Task SendEmailAsync(List<string> bccEmails, string subject, string body);
 }

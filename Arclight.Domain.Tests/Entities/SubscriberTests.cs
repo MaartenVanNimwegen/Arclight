@@ -62,7 +62,7 @@ public class SubscriberTests
         Action act = () => new Subscriber(invalidEmail);
 
         // Assert
-        act.Should().Throw<ArgumentException>().WithMessage("E-mailadres is verplicht");
+        act.Should().Throw<ArgumentException>().WithMessage("Email address is required.");
     }
 
     [Fact]
@@ -72,7 +72,7 @@ public class SubscriberTests
         Action act = () => new Subscriber("geen-at-teken.nl");
 
         // Assert
-        act.Should().Throw<ArgumentException>().WithMessage("Ongeldig e-mailadres formaat");
+        act.Should().Throw<ArgumentException>().WithMessage("Invalid email address format.");
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class SubscriberTests
         Action act = () => new Subscriber(ValidEmail, Guid.Empty);
 
         // Assert
-        act.Should().Throw<ArgumentException>().WithMessage("UserId mag niet leeg zijn");
+        act.Should().Throw<ArgumentException>().WithMessage("UserId must not be empty.");
     }
 
     // --- Behavior Tests ---
@@ -196,6 +196,6 @@ public class SubscriberTests
         Action act = () => subscriber.LinkToUser(Guid.Empty);
 
         // Assert
-        act.Should().Throw<ArgumentException>().WithMessage("UserId mag niet leeg zijn.");
+        act.Should().Throw<ArgumentException>().WithMessage("UserId must not be empty.");
     }
 }
