@@ -1,1 +1,0 @@
-﻿public record SubscribeRequest(string Email);

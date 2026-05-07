@@ -1,8 +1,8 @@
 ﻿using Arclight.Api.Extensions;
 using Arclight.Api.Filters;
+using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using System;
 using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints;
@@ -13,7 +13,8 @@ public static class NewsletterEndpoints
     {
         var group = app.MapGroup("/newsletter");
 
-        group.MapPost("/subscribe", Subscribe);
+        group.MapPost("/subscribe", Subscribe)
+            .AddEndpointFilter<ValidationFilter<SubscribeRequest>>();
 
         group.MapPost("/send", SendNewsletter)
             .RequireAuthorization("RequireContentManager")
@@ -47,9 +48,9 @@ public static class NewsletterEndpoints
         {
             return Results.Conflict(new { error = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            return Results.Problem(detail: ex.Message, statusCode: 500);
+            return Results.Problem(detail: "An unexpected error occurred.", statusCode: 500);
         }
     }
 
@@ -71,7 +72,7 @@ public static class NewsletterEndpoints
         {
             return Results.BadRequest(new { error = ex.Message });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return Results.Problem(
                 detail: "An error occurred while sending the newsletter.",

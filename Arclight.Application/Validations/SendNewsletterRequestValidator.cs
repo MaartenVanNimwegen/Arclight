@@ -1,6 +1,7 @@
-﻿using FluentValidation;
+﻿using Arclight.Application.DTOs;
+using FluentValidation;
 
-namespace Arclight.Application.Validators;
+namespace Arclight.Application.Validations;
 
 public class SendNewsletterRequestValidator : AbstractValidator<SendNewsletterRequest>
 {
