@@ -4,8 +4,10 @@ using Arclight.Application;
 using Arclight.Infrastructure;
 using Arclight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace Arclight.Api
 {
@@ -16,6 +18,20 @@ namespace Arclight.Api
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+
+            // Mitigation for Threat #7: Anomalous traffic
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+                options.AddFixedWindowLimiter(policyName: "fixed", options =>
+                {
+                    options.PermitLimit = 10;
+                    options.Window = TimeSpan.FromSeconds(10);
+                    options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+                    options.QueueLimit = 2;
+                });
+            });
 
             var corsAllowedOrigins = builder.Configuration["Cors:AllowedOrigins"]?
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -99,6 +115,8 @@ namespace Arclight.Api
 
             var app = builder.Build();
 
+            app.UseRateLimiter();
+
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
@@ -137,11 +155,13 @@ namespace Arclight.Api
             app.MapControllers();
 
             // Configure Endpoints
-            app.MapUserEndpoints();
-            app.MapArticleEndpoints();
-            app.MapCategoryEndpoints();
-            app.MapCommentEndpoints();
-            app.MapNewsletterEndpoints();
+            app.MapUserEndpoints().RequireRateLimiting("fixed");
+            app.MapArticleEndpoints().RequireRateLimiting("fixed");
+            app.MapCategoryEndpoints().RequireRateLimiting("fixed");
+            app.MapCommentEndpoints().RequireRateLimiting("fixed");
+            app.MapNewsletterEndpoints().RequireRateLimiting("fixed");
+
+            app.MapControllers().RequireRateLimiting("fixed");
 
             app.Run();
         }
