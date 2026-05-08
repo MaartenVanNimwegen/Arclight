@@ -18,6 +18,7 @@ namespace Arclight.Application
             services.AddScoped<ISlugService, SlugService>();
             services.AddScoped<ICategoryService, CategoryService>();
             services.AddScoped<ICommentService, CommentService>();
+            services.AddScoped<INewsletterService, NewsletterService>();
 
             services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 

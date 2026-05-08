@@ -159,6 +159,7 @@ namespace Arclight.Api
             app.MapArticleEndpoints().RequireRateLimiting("fixed");
             app.MapCategoryEndpoints().RequireRateLimiting("fixed");
             app.MapCommentEndpoints().RequireRateLimiting("fixed");
+            app.MapNewsletterEndpoints().RequireRateLimiting("fixed");
 
             app.MapControllers().RequireRateLimiting("fixed");
 

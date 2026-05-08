@@ -10,6 +10,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Category> Categories { get; set; }
 
     public DbSet<Comment> Comments { get; set; }
+    public DbSet<Subscriber> Subscribers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -28,6 +29,10 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // Article configuration
         modelBuilder.Entity<Article>()
             .HasIndex(a => a.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<Subscriber>()
+            .HasIndex(s => s.Email)
             .IsUnique();
 
         // Relation 1: An article has one author
@@ -56,5 +61,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasForeignKey(c => c.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        // Relation 3: A subscriber can optionally be linked to a User
+        modelBuilder.Entity<Subscriber>()
+            .HasOne(s => s.User)
+            .WithMany()
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

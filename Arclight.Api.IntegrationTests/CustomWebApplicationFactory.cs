@@ -1,4 +1,5 @@
 ﻿using Arclight.Api;
+using Arclight.Application.Interfaces;
 using Arclight.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
@@ -7,6 +8,7 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 using System;
 
 namespace Arclight.Api.IntegrationTests;
@@ -31,9 +33,16 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureTestServices(services =>
         {
+            services.RemoveAll(typeof(IEmailService));
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
             services.RemoveAll(typeof(AppDbContext));
             services.RemoveAll(typeof(System.Data.Common.DbConnection));
+
+            var emailServiceMock = new Mock<IEmailService>();
+            emailServiceMock
+                .Setup(e => e.SendEmailAsync(It.IsAny<List<string>>(), It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(Task.CompletedTask);
+            services.AddScoped<IEmailService>(_ => emailServiceMock.Object);
 
             services.AddSingleton<DbContextOptions<AppDbContext>>(provider =>
             {
