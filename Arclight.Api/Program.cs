@@ -24,7 +24,7 @@ namespace Arclight.Api
                 var logDirectory = Environment.GetEnvironmentVariable("ARCLIGHT_LOG_DIRECTORY");
                 if (string.IsNullOrWhiteSpace(logDirectory))
                 {
-                    logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+                    logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "logs");
                 }
 
                 try
