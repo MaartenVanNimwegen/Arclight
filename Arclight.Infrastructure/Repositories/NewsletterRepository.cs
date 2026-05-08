@@ -10,6 +10,8 @@ public class NewsletterRepository : INewsletterRepository
 {
     private readonly AppDbContext _context;
 
+    private const string PostgresUniqueViolationCode = "23505";
+
     public NewsletterRepository(AppDbContext context)
     {
         _context = context;
@@ -45,7 +47,7 @@ public class NewsletterRepository : INewsletterRepository
         {
             await _context.SaveChangesAsync();
         }
-        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == PostgresUniqueViolationCode)
         {
             throw new InvalidOperationException("This email address is already subscribed.", ex);
         }
