@@ -4,6 +4,7 @@ using Arclight.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Arclight.Infrastructure.Authentication;
+using Arclight.Infrastructure.Services;
 
 namespace Arclight.Infrastructure;
 
@@ -18,6 +19,8 @@ public static class DependencyInjection
         services.AddScoped<IArticleRepository, ArticleRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<INewsletterRepository, NewsletterRepository>();
+        services.AddScoped<IEmailService, EmailService>();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
