@@ -33,7 +33,8 @@ namespace Arclight.Api
                 }
                 catch (Exception ex)
                 {
-                    throw new InvalidOperationException($"Failed to create log directory at '{logDirectory}'.", ex);
+                    var sanitizedLogDirectory = logDirectory.Replace("\r", string.Empty).Replace("\n", string.Empty);
+                    throw new InvalidOperationException($"Failed to create log directory at '{sanitizedLogDirectory}'.", ex);
                 }
 
                 Log.Logger = new LoggerConfiguration()

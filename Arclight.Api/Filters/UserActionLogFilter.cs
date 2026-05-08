@@ -6,6 +6,8 @@ namespace Arclight.Api.Filters;
 
 public class UserActionLogFilter(ILogger<UserActionLogFilter> logger) : IEndpointFilter
 {
+    private const string SubClaimType = "sub";
+
     public async ValueTask<object?> InvokeAsync(EndpointFilterInvocationContext context, EndpointFilterDelegate next)
     {
         var httpContext = context.HttpContext;
@@ -14,7 +16,7 @@ public class UserActionLogFilter(ILogger<UserActionLogFilter> logger) : IEndpoin
         var userId = "Anonymous";
         if (user.Identity?.IsAuthenticated == true)
         {
-            userId = user.FindFirst("sub")?.Value
+            userId = user.FindFirst(SubClaimType)?.Value
                 ?? user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
                 ?? "AuthenticatedUser";
         }
