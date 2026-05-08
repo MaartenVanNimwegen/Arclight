@@ -1,4 +1,6 @@
-﻿using Arclight.Application.DTOs;
+using Arclight.Application.DTOs;
+using Arclight.Domain.Entities;
+using Arclight.Domain.Enums;
 using FluentAssertions;
 using System;
 using System.Net;
@@ -11,6 +13,8 @@ namespace Arclight.Api.IntegrationTests.Endpoints;
 
 public class UserEndpointsTests : BaseIntegrationTest
 {
+    private readonly Guid _testUserId = Guid.Parse(TestAuthHandler.TestUserId);
+
     public UserEndpointsTests(CustomWebApplicationFactory factory) : base(factory) { }
 
     // Register tests
@@ -236,6 +240,86 @@ public class UserEndpointsTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ShouldReturnNoContent_WhenUserUpdatesOwnProfile()
+    {
+        // Arrange
+        await ExecuteDbContextAsync(async context =>
+        {
+            context.Users.Add(new User(_testUserId, "profile@test.nl", "Old", "Name", "hashed-password", UserRole.User, UserStatus.Active));
+            await context.SaveChangesAsync();
+        });
+
+        var client = CreateClientWithRoles("User");
+        var request = new UpdateProfileRequest("New", "Surname");
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/user/{_testUserId}", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+        await ExecuteDbContextAsync(async context =>
+        {
+            var user = await context.Users.FindAsync(_testUserId);
+            user.Should().NotBeNull();
+            user!.FirstName.Should().Be("New");
+            user.LastName.Should().Be("Surname");
+        });
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ShouldReturnBadRequest_WhenRequestIsInvalid()
+    {
+        // Arrange
+        var client = CreateClientWithRoles("User");
+        var request = new UpdateProfileRequest("", "");
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/user/{_testUserId}", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var content = await response.Content.ReadAsStringAsync();
+        content.Should().Contain("First name is required.");
+        content.Should().Contain("Last name is required.");
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ShouldReturnForbidden_WhenUserUpdatesAnotherProfile()
+    {
+        // Arrange
+        var client = CreateClientWithRoles("User");
+        var request = new UpdateProfileRequest("New", "Surname");
+
+        // Act
+        var response = await client.PutAsJsonAsync($"/user/{Guid.NewGuid()}", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+    }
+
+    [Fact]
+    public async Task UpdateProfile_ShouldReturnNoContent_WhenAdminUpdatesAnotherProfile()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        await ExecuteDbContextAsync(async context =>
+        {
+            context.Users.Add(new User(userId, "admin-update@test.nl", "Old", "Name", "hashed-password", UserRole.User, UserStatus.Active));
+            await context.SaveChangesAsync();
+        });
+
+        var adminClient = CreateClientWithRoles("Admin");
+        var request = new UpdateProfileRequest("Admin", "Updated");
+
+        // Act
+        var response = await adminClient.PutAsJsonAsync($"/user/{userId}", request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }
 
 

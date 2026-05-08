@@ -142,4 +142,9 @@ public class User : Entity
         Status = UserStatus.Inactive;
         SetUpdatedDate();
     }
+
+    public void UpdateProfile(string firstName, string lastName)
+    {
+        UpdateName(firstName, lastName);
+    }
 }

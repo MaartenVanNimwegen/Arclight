@@ -36,5 +36,16 @@ namespace Arclight.Infrastructure.Repositories
         {
             context.Users.Remove(user);
         }
+
+        public async Task UpdateUserProfileAsync(Guid id, string firstName, string lastName)
+        {
+            User? user = await context.Users.FindAsync(id);
+            if (user is null)
+            {
+                throw new KeyNotFoundException("User not found");
+            }
+
+            user.UpdateProfile(firstName, lastName);
+        }
     }
 }
