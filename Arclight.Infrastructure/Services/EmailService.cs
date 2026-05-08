@@ -34,10 +34,13 @@ public class EmailService : IEmailService
         if (!int.TryParse(smtpPortRaw, out var smtpPort))
             throw new InvalidOperationException("Email configuration is invalid: EmailSettings:Port must be a valid integer.");
 
+        var enableSslRaw = _configuration["EmailSettings:EnableSsl"];
+        var enableSsl = bool.TryParse(enableSslRaw, out var parsedSsl) ? parsedSsl : true;
+
         using var client = new SmtpClient(smtpHost, smtpPort)
         {
             Credentials = new NetworkCredential(smtpUser, smtpPass),
-            EnableSsl = true
+            EnableSsl = enableSsl
         };
 
         using var mailMessage = new MailMessage

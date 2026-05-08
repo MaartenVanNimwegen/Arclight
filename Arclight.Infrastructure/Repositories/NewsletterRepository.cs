@@ -2,6 +2,7 @@
 using Arclight.Domain.Entities;
 using Arclight.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace Arclight.Infrastructure.Repositories;
 
@@ -40,6 +41,13 @@ public class NewsletterRepository : INewsletterRepository
 
     public async Task SaveChangesAsync()
     {
-        await _context.SaveChangesAsync();
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException pgEx && pgEx.SqlState == "23505")
+        {
+            throw new InvalidOperationException("This email address is already subscribed.", ex);
+        }
     }
 }
