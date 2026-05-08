@@ -95,8 +95,9 @@ public class UserService(IUserRepository userRepository, IArticleRepository arti
         await userRepository.SaveChangesAsync();
     }
 
-    public Task UpdateUserProfileAsync(Guid id, string firstName, string lastName)
+    public async Task UpdateUserProfileAsync(Guid id, string firstName, string lastName)
     {
-        return userRepository.UpdateUserProfileAsync(id, firstName, lastName);
+        await userRepository.UpdateUserProfileAsync(id, firstName, lastName);
+        await userRepository.SaveChangesAsync();
     }
 }

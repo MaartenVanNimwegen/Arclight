@@ -145,9 +145,6 @@ public class User : Entity
 
     public void UpdateProfile(string firstName, string lastName)
     {
-        FirstName = firstName;
-        LastName = lastName;
-
-        SetUpdatedDate();
+        UpdateName(firstName, lastName);
     }
 }

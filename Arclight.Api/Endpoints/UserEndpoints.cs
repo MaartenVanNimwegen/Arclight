@@ -1,8 +1,10 @@
-﻿using Arclight.Api.Filters;
+﻿using Arclight.Api.Extensions;
+using Arclight.Api.Filters;
 using Arclight.Application.DTOs;
 using Arclight.Application.Interfaces;
 using Arclight.Domain.Entities;
 using Arclight.Domain.Enums;
+using System.Security.Claims;
 
 namespace Arclight.Api.Endpoints
 {
@@ -115,12 +117,31 @@ namespace Arclight.Api.Endpoints
             }
         }
 
-        static async Task<IResult> UpdateProfile(Guid id, UpdateProfileRequest request, IUserService service)
+        static async Task<IResult> UpdateProfile(Guid id, UpdateProfileRequest request, IUserService service, ClaimsPrincipal user)
         {
+            Guid currentUserId;
+            try
+            {
+                currentUserId = user.GetUserId();
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return Results.Unauthorized();
+            }
+
+            if (id != currentUserId && user.GetUserRole() != UserRole.Admin)
+            {
+                return Results.Forbid();
+            }
+
             try
             {
                 await service.UpdateUserProfileAsync(id, request.FirstName, request.LastName);
                 return Results.NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return Results.BadRequest(new { error = ex.Message });
             }
             catch (KeyNotFoundException)
             {
