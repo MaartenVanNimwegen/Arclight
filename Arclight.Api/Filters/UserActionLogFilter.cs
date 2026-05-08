@@ -20,7 +20,7 @@ public class UserActionLogFilter(ILogger<UserActionLogFilter> logger) : IEndpoin
         }
         var sanitizedUserId = SanitizeForLog(userId);
 
-        var path = SanitizeForLog(httpContext.Request.Path.Value);
+        var path = SanitizeForLog(httpContext.Request.Path.ToString());
         var method = SanitizeForLog(httpContext.Request.Method);
 
         logger.LogDebug("Action started: User {UserId} called {Method} {Path}", sanitizedUserId, method, path);

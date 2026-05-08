@@ -27,7 +27,14 @@ namespace Arclight.Api
                     logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
                 }
 
-                Directory.CreateDirectory(logDirectory);
+                try
+                {
+                    Directory.CreateDirectory(logDirectory);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Failed to create log directory at '{logDirectory}'.", ex);
+                }
 
                 Log.Logger = new LoggerConfiguration()
                     .MinimumLevel.Information()
