@@ -19,24 +19,29 @@ namespace Arclight.Api
 
         public static void Main(string[] args)
         {
-
-            var logDirectory = Path.Combine(Directory.GetCurrentDirectory(), "logs");
-
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Information()
-                .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .WriteTo.File(
-                    Path.Combine(logDirectory, "audit-log-.txt"),
-                    rollingInterval: RollingInterval.Day,
-                    outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
-                    restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information
-                )
-            .CreateLogger();
-
             try
             {
+                var logDirectory = Environment.GetEnvironmentVariable("ARCLIGHT_LOG_DIRECTORY");
+                if (string.IsNullOrWhiteSpace(logDirectory))
+                {
+                    logDirectory = Path.Combine(AppContext.BaseDirectory, "logs");
+                }
+
+                Directory.CreateDirectory(logDirectory);
+
+                Log.Logger = new LoggerConfiguration()
+                    .MinimumLevel.Information()
+                    .MinimumLevel.Override("Microsoft", Serilog.Events.LogEventLevel.Warning)
+                    .Enrich.FromLogContext()
+                    .WriteTo.Console()
+                    .WriteTo.File(
+                        Path.Combine(logDirectory, "audit-log-.txt"),
+                        rollingInterval: RollingInterval.Day,
+                        outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {Message:lj}{NewLine}{Exception}",
+                        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information
+                    )
+                .CreateLogger();
+
                 Log.Information("Starting Arclight API");
 
                 var builder = WebApplication.CreateBuilder(args);

@@ -11,18 +11,23 @@ public class UserActionLogFilter(ILogger<UserActionLogFilter> logger) : IEndpoin
         var httpContext = context.HttpContext;
         var user = httpContext.User;
 
-        var userId = user.Identity?.IsAuthenticated == true
-            ? user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
-            : "Anonymous";
+        var userId = "Anonymous";
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            userId = user.FindFirst("sub")?.Value
+                ?? user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value
+                ?? "AuthenticatedUser";
+        }
+        var sanitizedUserId = SanitizeForLog(userId);
 
-        var path = httpContext.Request.Path;
+        var path = SanitizeForLog(httpContext.Request.Path.Value);
         var method = SanitizeForLog(httpContext.Request.Method);
 
-        logger.LogInformation("Action started: User {UserId} called {Method} {Path}", userId, method, path);
+        logger.LogDebug("Action started: User {UserId} called {Method} {Path}", sanitizedUserId, method, path);
 
         var result = await next(context);
 
-        logger.LogInformation("Action completed: User {UserId} finished {Method} {Path}", userId, method, path);
+        logger.LogDebug("Action completed: User {UserId} finished {Method} {Path}", sanitizedUserId, method, path);
 
         return result;
     }
