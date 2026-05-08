@@ -16,7 +16,7 @@ public class UserActionLogFilter(ILogger<UserActionLogFilter> logger) : IEndpoin
             : "Anonymous";
 
         var path = httpContext.Request.Path;
-        var method = httpContext.Request.Method;
+        var method = SanitizeForLog(httpContext.Request.Method);
 
         logger.LogInformation("Action started: User {UserId} called {Method} {Path}", userId, method, path);
 
@@ -25,5 +25,12 @@ public class UserActionLogFilter(ILogger<UserActionLogFilter> logger) : IEndpoin
         logger.LogInformation("Action completed: User {UserId} finished {Method} {Path}", userId, method, path);
 
         return result;
+    }
+
+    private static string SanitizeForLog(string? value)
+    {
+        return string.IsNullOrEmpty(value)
+            ? string.Empty
+            : value.Replace("\r", string.Empty).Replace("\n", string.Empty);
     }
 }
