@@ -14,7 +14,8 @@ namespace Arclight.Api.Endpoints
 
         public static IEndpointConventionBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/user");
+            var group = app.MapGroup("/user")
+                .AddEndpointFilter<UserActionLogFilter>();
 
             group.MapPost("/register", CreateUser)
                 .AddEndpointFilter<ValidationFilter<RegisterRequest>>();

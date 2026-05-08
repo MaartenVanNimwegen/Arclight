@@ -10,7 +10,8 @@ public static class CommentEndpoints
 {
     public static IEndpointConventionBuilder MapCommentEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/articles/{articleId:guid}/comments");
+        var group = app.MapGroup("/articles/{articleId:guid}/comments")
+            .AddEndpointFilter<UserActionLogFilter>();
 
         group.MapPost("", CreateComment)
             .RequireAuthorization()
@@ -22,7 +23,8 @@ public static class CommentEndpoints
         group.MapDelete("{commentId:guid}", DeleteCommentById)
             .RequireAuthorization();
 
-        var adminGroup = app.MapGroup("/admin/comments");
+        var adminGroup = app.MapGroup("/admin/comments")
+            .AddEndpointFilter<UserActionLogFilter>();
 
         adminGroup.MapGet("", GetAllComments)
             .RequireAuthorization("RequireContentManager");

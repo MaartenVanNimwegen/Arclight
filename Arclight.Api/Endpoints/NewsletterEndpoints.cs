@@ -11,7 +11,8 @@ public static class NewsletterEndpoints
 {
     public static IEndpointConventionBuilder MapNewsletterEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/newsletter");
+        var group = app.MapGroup("/newsletter")
+            .AddEndpointFilter<UserActionLogFilter>();
 
         group.MapPost("/subscribe", Subscribe)
             .AddEndpointFilter<ValidationFilter<SubscribeRequest>>();
