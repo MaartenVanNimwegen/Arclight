@@ -13,7 +13,8 @@ public static class ArticleEndpoints
 {
     public static IEndpointConventionBuilder MapArticleEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/articles");
+        var group = app.MapGroup("/articles")
+            .AddEndpointFilter<UserActionLogFilter>();
 
         group.MapGet("/", GetAllArticles);
         group.MapGet("/{slug}", GetArticleBySlug);

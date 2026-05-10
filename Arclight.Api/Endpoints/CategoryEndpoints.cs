@@ -8,7 +8,8 @@ public static class CategoryEndpoints
 {
     public static IEndpointConventionBuilder MapCategoryEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/categories");
+        var group = app.MapGroup("/categories")
+            .AddEndpointFilter<UserActionLogFilter>();
 
         group.MapGet("/", GetAllCategories);
         group.MapPost("/", CreateCategory)
