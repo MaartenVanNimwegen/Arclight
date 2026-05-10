@@ -7,7 +7,7 @@ namespace Arclight.Domain.Enums
     public enum UserRole
     {
         User = 0,
-        ContentCreator = 1,
-        Admin = 2,
+        Admin = 1,
+        ContentCreator = 2,
     }
 }

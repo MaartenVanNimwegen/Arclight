@@ -25,6 +25,7 @@ public static class CommentEndpoints
 
         var adminGroup = app.MapGroup("/admin/comments")
             .AddEndpointFilter<UserActionLogFilter>();
+        adminGroup.RequireRateLimiting("fixed");
 
         adminGroup.MapGet("", GetAllComments)
             .RequireAuthorization("RequireContentManager");
@@ -105,6 +106,10 @@ public static class CommentEndpoints
         catch (ArgumentException ex)
         {
             return Results.BadRequest(new { message = ex.Message });
+        }
+        catch (KeyNotFoundException)
+        {
+            return Results.Unauthorized();
         }
         catch (UnauthorizedAccessException)
         {

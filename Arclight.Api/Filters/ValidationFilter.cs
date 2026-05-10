@@ -17,7 +17,14 @@ public class ValidationFilter<T>(IValidator<T> validator) : IEndpointFilter wher
 
         if (!validationResult.IsValid)
         {
-            return Results.ValidationProblem(validationResult.ToDictionary());
+            var errors = validationResult.Errors
+                .GroupBy(e => e.PropertyName)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.Select(error => error.ErrorMessage).Distinct().ToArray()
+                );
+
+            return Results.ValidationProblem(errors);
         }
 
         return await next(context);

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System;
 using Xunit;
 
 namespace Arclight.Infrastructure.Tests.Authentication;
@@ -50,5 +51,8 @@ public class JwtTokenGeneratorTests
 
         subClaim.Should().Be(user.Id.ToString());
         roleClaim.Should().Be(UserRole.ContentCreator.ToString());
+
+        jwtToken.ValidTo.Should().BeAfter(DateTime.UtcNow.AddMinutes(55));
+        jwtToken.ValidTo.Should().BeBefore(DateTime.UtcNow.AddMinutes(65));
     }
 }

@@ -77,6 +77,8 @@ public class UserEndpointsTests : BaseIntegrationTest
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
+        var responseBody = await response.Content.ReadAsStringAsync();
+        responseBody.Should().NotContain("passwordHash");
     }
 
     [Fact]

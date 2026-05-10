@@ -36,12 +36,18 @@ namespace Arclight.Infrastructure.Authentication
             new("role", user.Role.ToString())
         };
 
+            var expiryMinutes = 30;
+            if (int.TryParse(configuration["JwtSettings:ExpiryMinutes"], out var configuredExpiryMinutes) && configuredExpiryMinutes > 0)
+            {
+                expiryMinutes = configuredExpiryMinutes;
+            }
+
             // 3. Build the token
             var token = new JwtSecurityToken(
                 issuer: configuration["JwtSettings:Issuer"],
                 audience: configuration["JwtSettings:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(30), // Token has a lifetime of 30 minutes
+                expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
                 signingCredentials: creds
             );
 
