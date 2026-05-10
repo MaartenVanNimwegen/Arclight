@@ -108,7 +108,17 @@ namespace Arclight.Api
                 }
 
                 builder.Services.AddApplication();
-                builder.Services.AddInfrastructure(builder.Configuration.GetConnectionString("DefaultConnection")!);
+
+                var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                if (string.IsNullOrWhiteSpace(connectionString))
+                {
+                    if (!builder.Environment.IsEnvironment("Testing"))
+                    {
+                        throw new InvalidOperationException("Database configuration error: 'ConnectionStrings:DefaultConnection' is missing or empty.");
+                    }
+                }
+
+                builder.Services.AddInfrastructure(connectionString);
 
                 builder.Services.AddEndpointsApiExplorer();
 
@@ -189,8 +199,6 @@ namespace Arclight.Api
 
                 app.UseAuthentication();
                 app.UseAuthorization();
-
-                app.MapControllers();
 
                 // Configure Endpoints
                 app.MapUserEndpoints().RequireRateLimiting("fixed");

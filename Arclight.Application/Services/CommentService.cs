@@ -17,7 +17,7 @@ public class CommentService(
         if (!articleExists) throw new ArgumentException("Article not found.");
 
         var user = await userRepository.GetByIdAsync(userId);
-        if (user is null) throw new UnauthorizedAccessException("User not found.");
+        if (user is null) throw new KeyNotFoundException("User not found.");
 
         Comment comment = new(
             request.Text,

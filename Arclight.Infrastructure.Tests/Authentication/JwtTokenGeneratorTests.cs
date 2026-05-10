@@ -6,34 +6,31 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System;
 using Xunit;
 
 namespace Arclight.Infrastructure.Tests.Authentication;
 
 public class JwtTokenGeneratorTests
 {
-    private readonly IConfiguration _configuration;
-
-    public JwtTokenGeneratorTests()
+    [Fact]
+    public void GenerateToken_ShouldReturnValidJwtToken_WithCorrectClaims()
     {
+        // Arrange
+        const int configuredExpiryMinutes = 60;
         var inMemorySettings = new Dictionary<string, string?>
         {
             {"JwtSettings:Secret", "SuperGeheimeSleutelDieEchtMinimaal32KaraktersLangMoetZijn!"},
             {"JwtSettings:Issuer", "TestIssuer"},
             {"JwtSettings:Audience", "TestAudience"},
-            {"JwtSettings:ExpiryMinutes", "60"}
+            {"JwtSettings:ExpiryMinutes", configuredExpiryMinutes.ToString()}
         };
 
-        _configuration = new ConfigurationBuilder()
+        var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemorySettings)
             .Build();
-    }
 
-    [Fact]
-    public void GenerateToken_ShouldReturnValidJwtToken_WithCorrectClaims()
-    {
-        // Arrange
-        var generator = new JwtTokenGenerator(_configuration);
+        var generator = new JwtTokenGenerator(configuration);
         var user = new User("token@test.nl", "Token", "Test", "hash", UserRole.ContentCreator);
 
         // Act
@@ -50,5 +47,8 @@ public class JwtTokenGeneratorTests
 
         subClaim.Should().Be(user.Id.ToString());
         roleClaim.Should().Be(UserRole.ContentCreator.ToString());
+
+        jwtToken.ValidTo.Should().BeAfter(DateTime.UtcNow.AddMinutes(configuredExpiryMinutes - 5));
+        jwtToken.ValidTo.Should().BeBefore(DateTime.UtcNow.AddMinutes(configuredExpiryMinutes + 5));
     }
 }

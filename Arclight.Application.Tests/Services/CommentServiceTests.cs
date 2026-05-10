@@ -80,7 +80,7 @@ public class CommentServiceTests
     }
 
     [Fact]
-    public async Task AddCommentAsync_ShouldThrowUnauthorizedAccessException_WhenUserDoesNotExist()
+    public async Task AddCommentAsync_ShouldThrowKeyNotFoundException_WhenUserDoesNotExist()
     {
         // Arrange
         var articleId = Guid.NewGuid();
@@ -96,7 +96,7 @@ public class CommentServiceTests
         var act = () => _sut.AddCommentAsync(articleId, userId, new CreateCommentRequest("X"));
 
         // Assert
-        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+        await act.Should().ThrowAsync<KeyNotFoundException>()
             .WithMessage("User not found.");
     }
 
