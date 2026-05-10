@@ -112,11 +112,7 @@ namespace Arclight.Api
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
                 if (string.IsNullOrWhiteSpace(connectionString))
                 {
-                    if (builder.Environment.IsEnvironment("Testing"))
-                    {
-                        connectionString = "Host=localhost;Database=arclight-testing;Username=test;Password=test";
-                    }
-                    else
+                    if (!builder.Environment.IsEnvironment("Testing"))
                     {
                         throw new InvalidOperationException("Database configuration error: 'ConnectionStrings:DefaultConnection' is missing or empty.");
                     }
