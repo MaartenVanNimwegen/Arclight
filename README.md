@@ -135,3 +135,16 @@ To deploy a new version:
     git push origin v1.0.0
     ```
 3.  The **Production Release** pipeline will build the artifact with version `1.0.0`.
+
+---
+
+## 🛡️ Security & Threat Mitigation
+
+As part of the secure software development lifecycle, a Threat Model was created using the OWASP Threat Modeling Process and the Microsoft Threat Modeling Tool. 
+
+**Mitigation Proof: Rate Limiting**
+* **Threat ID:** #7
+* **Description:** *An adversary may leverage the lack of monitoring systems and trigger anomalous traffic to database.* (STRIDE: Tampering / Denial of Service)
+* **Modified File:** `Arclight.Api/Program.cs`
+* **Mitigation Strategy:** To prevent anomalous traffic, brute-force attacks, and API flooding, the built-in `.NET RateLimiter` middleware was implemented. A `FixedWindowLimiter` policy named "fixed" was configured to restrict incoming requests to **10 requests per 10 seconds** per client. 
+* **Implementation Details:** The middleware was added to the service container (`builder.Services.AddRateLimiter`) and injected into the HTTP pipeline (`app.UseRateLimiter()`) before the Authorization middleware. The policy is enforced globally on all controllers via `.RequireRateLimiting("fixed")`.

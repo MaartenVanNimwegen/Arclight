@@ -7,6 +7,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Data\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Data\DbInitializer.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Arclight.Application\Arclight.Application.csproj" />
     <ProjectReference Include="..\Arclight.Domain\Arclight.Domain.csproj" />
   </ItemGroup>
