@@ -65,6 +65,36 @@ The solution is structured to enforce separation of concerns:
 
 3.  **Configuration**
     Update `appsettings.json` in `Arclight.Api` with your connection string.
+    ```json
+    {
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "ConnectionStrings": {
+        "DefaultConnection": "Host=localhost;Database=ArclightDb;Username=jouw-gebruikersnaam;Password=jouw-wachtwoord"
+      },
+      "JwtSettings": {
+        "Issuer": "ArclightApi",
+        "Audience": "ArclightFrontend",
+        "Secret": "jouw-geheime-sleutel"
+      },
+      "Cors": {
+        "AllowedOrigins": "http://localhost:5173"
+      },
+      "AllowedHosts": "*",
+      "EmailSettings": {
+        "Host": "sandbox.smtp.mailtrap.io",
+        "Port": 587,
+        "Username": "jouw-gebruikersnaam",
+        "Password": "jouw-wachtwoord",
+        "FromEmail": "no-reply@arclight.com",
+        "FromName": "Arclight newsletter"
+      }
+    }
+    ```
 
 4.  **Run the application**
     ```bash
