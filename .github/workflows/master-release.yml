@@ -37,7 +37,7 @@ jobs:
       run: dotnet publish Arclight.Api/Arclight.Api.csproj -c Release -o ./publish /p:Version=${{ env.VERSION }}
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
         name: Arclight-Api-${{ env.VERSION }}
         path: ./publish
